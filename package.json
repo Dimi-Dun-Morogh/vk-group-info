@@ -1,0 +1,38 @@
+{
+  "name": "vk_grp_info",
+  "version": "1.0.0",
+  "description": "vk grp info",
+  "scripts": {
+    "build": "rm -rf build/ && prettier --write src/ && tsc && tsc-alias",
+    "start": "node  build/app.js",
+    "dev": "npx nodemon ./src/app.ts",
+    "lint": "eslint ./src",
+    "lint:fix": "eslint ./src --fix"
+  },
+  "keywords": [],
+  "author": "Dimi-Dun-Morogh",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.0.3",
+    "typescript-transform-paths": "^3.4.6"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.13",
+    "@types/node": "^18.15.11",
+    "@typescript-eslint/eslint-plugin": "^5.58.0",
+    "@typescript-eslint/parser": "^5.58.0",
+    "eslint": "^8.2.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-config-airbnb-typescript": "^17.0.0",
+    "eslint-config-prettier": "^8.8.0",
+    "eslint-plugin-import": "^2.25.2",
+    "eslint-plugin-prettier": "^4.2.1",
+    "nodemon": "^2.0.22",
+    "npm-run-all": "^4.1.5",
+    "prettier": "^2.8.7",
+    "ts-node": "^10.9.1",
+    "tsc-alias": "^1.8.5",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^5.0.4"
+  }
+}
