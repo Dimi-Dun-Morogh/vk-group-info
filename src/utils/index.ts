@@ -1,13 +1,13 @@
-import { mkdirSync } from 'fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { appendFileSync, existsSync } from 'fs';
 import path from 'path';
 import { ItemPost } from 'types';
 
 class Utils {
   static createTmpDir() {
-    const filePath = path.join(process.cwd(), '/temp_data')
+    const filePath = path.join(process.cwd(), '/temp_data');
     const exists = existsSync(filePath);
-    if(!exists) mkdirSync(filePath);
+    if (!exists) mkdirSync(filePath);
   }
 
   static writeCSV(post: ItemPost) {
@@ -22,6 +22,33 @@ class Utils {
     }
   }
 
+  static readPostsCSV() {
+    const file = readFileSync(
+      path.join(process.cwd(), '/temp_data/postsInCsv.csv'), {encoding: 'utf-8'}
+    );
+    return file.split('\n');
+  }
+
+  static writeOffset(page: number | string) {
+    this.createTmpDir();
+    const filePath = path.join(process.cwd(), '/temp_data/offset');
+    writeFileSync(filePath, String(page));
+  }
+
+  static getOffset() {
+    this.createTmpDir();
+    const filePath = path.join(process.cwd(), '/temp_data/offset');
+    const exists = existsSync(filePath);
+    if (!exists) return '0';
+    const file = readFileSync(filePath);
+    return file.toString();
+  }
+
+  static waiter() {
+    return new Promise((resolve) => {
+      setTimeout(resolve, 10000);
+    });
+  }
 }
 
 export default Utils;

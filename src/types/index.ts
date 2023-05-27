@@ -9,6 +9,10 @@ export interface ResponseWall {
  }
 }
 
+export interface ResponseWallExec {
+  response: ItemPost[]
+ }
+
 export interface ItemPost {
   donut: Donut
   is_pinned?: number

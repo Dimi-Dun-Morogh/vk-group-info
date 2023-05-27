@@ -6,6 +6,7 @@
     "build": "rm -rf build/ && prettier --write src/ && tsc && tsc-alias",
     "start": "node  build/app.js",
     "dev": "npx nodemon ./src/app.ts",
+    "run": "ts-node ./src/app.ts",
     "lint": "eslint ./src",
     "lint:fix": "eslint ./src --fix"
   },
