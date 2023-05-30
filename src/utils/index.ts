@@ -24,7 +24,8 @@ class Utils {
 
   static readPostsCSV() {
     const file = readFileSync(
-      path.join(process.cwd(), '/temp_data/postsInCsv.csv'), {encoding: 'utf-8'}
+      path.join(process.cwd(), '/temp_data/postsInCsv.csv'),
+      { encoding: 'utf-8' },
     );
     return file.split('\n');
   }
@@ -44,10 +45,15 @@ class Utils {
     return file.toString();
   }
 
-  static waiter() {
+  static waiter(time=  10000) {
     return new Promise((resolve) => {
-      setTimeout(resolve, 10000);
+      setTimeout(resolve, time);
     });
+  }
+
+  static writeCommentsJson(commentsObj: any) {
+    const filePath = path.join(process.cwd(), '/temp_data/comments.json');
+    writeFileSync(filePath, JSON.stringify(commentsObj));
   }
 }
 
