@@ -21,7 +21,7 @@ class VkGrpInfo {
    * @param endDate date string format  YYYY-MM-DDTHH:mm '2023-05-31T23:59'
    * @returns
    */
-  async getWPosts(startDate:string, endDate:string) {
+  async getWPosts(startDate: string, endDate: string) {
     try {
       const offset = Number(Utils.getOffset());
       console.log('getWPosts', `current OFFSET IS ${offset}`);
@@ -56,7 +56,9 @@ class VkGrpInfo {
 
       const data: ResponseWallExec = await fetch(url).then((d) => d.json());
 
-      const reachedDate = data.response.some((p) => this.endGetWPosts(p, startDate));
+      const reachedDate = data.response.some((p) =>
+        this.endGetWPosts(p, startDate),
+      );
 
       data.response.forEach((p) => {
         const toDrop = this.dateReached(p, startDate, endDate);
@@ -80,20 +82,20 @@ class VkGrpInfo {
     }
   }
 
-  private endGetWPosts(post:ItemPost,startDay:string) {
-    const firstDay = new Date(startDay)
+  private endGetWPosts(post: ItemPost, startDay: string) {
+    const firstDay = new Date(startDay);
     const pinned = post.is_pinned;
     const postDate = Number(post.date + '000');
     return Number(firstDay) > postDate && !pinned;
   }
 
-  private dateReached(post: ItemPost, startDay:string, endDay:string) {
+  private dateReached(post: ItemPost, startDay: string, endDay: string) {
     // YYYY-MM-DDTHH:mm '2023-05-31T23:59' GMT-0500
-    const lastDay = new  Date(endDay);
-    const firstDay = new Date(startDay)
+    const lastDay = new Date(endDay);
+    const firstDay = new Date(startDay);
     const postDate = Number(post.date + '000');
 
-    return Number(lastDay) < postDate  ||   Number(firstDay) > postDate;
+    return Number(lastDay) < postDate || Number(firstDay) > postDate;
   }
 
   postDates() {
@@ -101,18 +103,17 @@ class VkGrpInfo {
     const lastPost = posts[posts.length - 2];
     const lastDate = new Date(
       Number(lastPost.split(',')[2] + '000'),
-    ).toLocaleDateString('Ru-ru');
+    ).toLocaleString('Ru-ru');
     const firstPostdate = posts.reduce((acc, p) => {
       const date = p.split(',')[2];
       if (Number(date) > acc) acc = Number(date);
       return acc;
     }, 0);
-    const firstDate = new Date(
-      Number(firstPostdate + '000'),
-    ).toLocaleDateString('Ru-ru');
-//     console.log(`${firstDate} -  ${lastDate}  -  даты записанных постов
-// всего постов - ${posts.length - 1}`);
-   return `[${firstDate} -  ${lastDate}] [всего постов - ${posts.length - 1}]`
+    const firstDate = new Date(Number(firstPostdate + '000')).toLocaleString(
+      'Ru-ru',
+    );
+
+    return `[${lastDate} -  ${firstDate}][всего постов - ${posts.length - 1}]`;
   }
 
   async printTop10posts(filter: 'likes' | 'comments') {
@@ -120,32 +121,36 @@ class VkGrpInfo {
       const data = await this.top10Posts(filter);
       if (!data) return;
 
-      const format = data.map((el) => {
-
-        return filter === 'comments'
-          ? {
-              Комментариев: el.comments,
-              Лайков: el.likes,
-              'Автор поста': el.author_name,
-              'Дата поста': new Date(
-                Number(el.date + '000'),
-              ).toLocaleDateString('Ru-ru'),
-              ссылка: el.link,
-            }
-          : {
-              Лайков: el.likes,
-              Комментариев: el.comments,
-              'Автор поста': el.author_name,
-              'Дата поста': new Date(
-                Number(el.date + '000'),
-              ).toLocaleDateString('Ru-ru'),
-              ссылка: el.link,
-            };
-      }).reduce((acc,el,index)=>{
-        acc[index+1] = el;
-        return acc;
-      },{} as {[key:number]:{[key:string]:string}})
-      console.log(`                    ТОП 20 ПОСТОВ ПО ${filter === 'comments' ? 'КОММЕНТАМ' : 'ЛАЙКАМ'} ${this.postDates()}`)
+      const format = data
+        .map((el) => {
+          return filter === 'comments'
+            ? {
+                Комментариев: el.comments,
+                Лайков: el.likes,
+                'Автор поста': el.author_name,
+                'Дата поста': new Date(
+                  Number(el.date + '000'),
+                ).toLocaleDateString('Ru-ru'),
+                ссылка: el.link,
+              }
+            : {
+                Лайков: el.likes,
+                Комментариев: el.comments,
+                'Автор поста': el.author_name,
+                'Дата поста': new Date(
+                  Number(el.date + '000'),
+                ).toLocaleDateString('Ru-ru'),
+                ссылка: el.link,
+              };
+        })
+        .reduce((acc, el, index) => {
+          acc[index + 1] = el;
+          return acc;
+        }, {} as { [key: number]: { [key: string]: string } });
+      console.log(`                     ТОП 20 ПОСТОВ ПО ${
+        filter === 'comments' ? 'КОММЕНТАМ' : 'ЛАЙКАМ'
+      }
+         ${this.postDates()}`);
       console.table(format);
     } catch (error) {
       console.error(error);
@@ -318,31 +323,91 @@ class VkGrpInfo {
     }
   }
 
+  async printTopPosters() {
+    try {
+      const posts = Utils.readPostsCSV().reduce((acc, el) => {
+        const [pid, from_id, date, likes, comments] = el.split(',');
+        const id = from_id;
+        // if(!id) return acc;
+        if (acc[id]) {
+          acc[id].count = acc[id].count + 1;
+          acc[id].likes = acc[id].likes + +likes;
+          acc[id].comments = acc[id].comments + +comments;
+        } else {
+          acc[id] = {
+            count: 1,
+            likes: +likes,
+            comments: +comments,
+          };
+        }
+        //console.log(acc)
+        return acc;
+      }, {} as { [key: string]: { count: number; likes: number; comments: number } });
+      const sorted = Object.entries(posts)
+        .sort((a, b) => b[1].count - a[1].count)
+        .slice(0, 20)
+        .map((item) => {
+          return {
+            id: item[0],
+            ...item[1],
+          };
+        });
+      const idsToFetch = sorted.reduce((acc, el) => (acc += `${el.id},`), '');
+      const url = `https://api.vk.com/method/users.get?&user_ids=${encodeURIComponent(
+        idsToFetch,
+      )}&access_token=${vk_token}&v=5.131`;
+      const usersGet: UserResponse = await fetch(url).then((d) => d.json());
+      const serialized = sorted.map((el) => {
+        const author = usersGet.response.find((au) => au.id == +el.id);
+        return {
+          ПОСТОВ: el.count,
+          'имя автора': `${author?.first_name} ${author?.last_name}`,
+          КОМЕНТОВ: el.comments,
+          ЛАЙКОВ: el.likes,
+        };
+      });
+
+      console.log(`     ТОП 20 ПОЛЬЗОВАТЕЛЕЙ ПО НАПИСАННЫМ ПОСТАМ | КОММЕНТЫ И ЛАЙКИ НА ПОСТАХ АВТОРА'
+      ${this.postDates()}`);
+      console.table(serialized.reduce((acc, el, index) => {
+        acc[index + 1] = el;
+        return acc;
+      }, {} as { [key: number]: { [key: string]: string | number } }));
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
   async printTopComentator() {
     const data: { [key: string]: number } = JSON.parse(
       Utils.readCommentsJson(),
     );
 
-    const sorted = Object.entries(data).sort((a, b) => b[1] - a[1]).slice(0,20)
-    const idsToFetch = sorted.reduce((acc,item)=>acc+=`${item[0]},`,'');
+    const sorted = Object.entries(data)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 20);
+    const idsToFetch = sorted.reduce((acc, item) => (acc += `${item[0]},`), '');
 
-    const url  = `https://api.vk.com/method/users.get?&user_ids=${encodeURIComponent(
+    const url = `https://api.vk.com/method/users.get?&user_ids=${encodeURIComponent(
       idsToFetch,
-    )}&access_token=${vk_token}&v=5.131`
-    const usersGet: UserResponse  = await fetch(url).then(d=>d.json());
-    const serialize = sorted.map(el=>{
-      const [id, score] = el;
-      const user = usersGet.response.find(usr=> usr.id == +id);
-      return {
-        Комментатор: `${user?.first_name} ${user?.last_name}`,
-        Комментариев:  score
-      }
-    }).reduce((acc,el,index)=>{
-      acc[index+1] = el;
-      return acc;
-    },{} as {[key:number]:{[key:string]:string|number}})
+    )}&access_token=${vk_token}&v=5.131`;
+    const usersGet: UserResponse = await fetch(url).then((d) => d.json());
+    const serialize = sorted
+      .map((el) => {
+        const [id, score] = el;
+        const user = usersGet.response.find((usr) => usr.id == +id);
+        return {
+          Комментатор: `${user?.first_name} ${user?.last_name}`,
+          Комментариев: score,
+        };
+      })
+      .reduce((acc, el, index) => {
+        acc[index + 1] = el;
+        return acc;
+      }, {} as { [key: number]: { [key: string]: string | number } });
 
-    console.log(`  ТОП 20 ПОЛЬЗОВАТЕЛЕЙ ПО КОММЕНТАРИЯМ' ${this.postDates()}`)
+    console.log(`     ТОП 20 ПОЛЬЗОВАТЕЛЕЙ ПО КОММЕНТАРИЯМ'
+${this.postDates()}`);
     console.table(serialize);
   }
 }
