@@ -392,3 +392,15 @@ export interface VkErr {
     error_code: number
   }
 }
+
+export interface UserResponse {
+  response: User[]
+}
+
+export interface User {
+  id: number
+  first_name: string
+  last_name: string
+  can_access_closed: boolean
+  is_closed: boolean
+}

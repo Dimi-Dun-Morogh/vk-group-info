@@ -1,4 +1,4 @@
-import { mkdirSync, readFileSync, writeFileSync } from 'fs';
+import { mkdirSync, readFileSync, writeFileSync, rmSync } from 'fs';
 import { appendFileSync, existsSync } from 'fs';
 import path from 'path';
 import { ItemPost } from 'types';
@@ -45,7 +45,7 @@ class Utils {
     return file.toString();
   }
 
-  static waiter(time=  10000) {
+  static waiter(time = 10000) {
     return new Promise((resolve) => {
       setTimeout(resolve, time);
     });
@@ -55,6 +55,19 @@ class Utils {
     const filePath = path.join(process.cwd(), '/temp_data/comments.json');
     writeFileSync(filePath, JSON.stringify(commentsObj));
   }
+
+  static readCommentsJson() {
+    const filePath = path.join(process.cwd(), '/temp_data/comments.json');
+    const data = readFileSync(filePath, { encoding: 'utf8' });
+    return data;
+  }
+
+  static wipeTemp () {
+    const filePath = path.join(process.cwd(), '/temp_data');
+    const exists = existsSync(filePath);
+    if(exists) rmSync(filePath, {force:true, recursive: true});
+  }
+
 }
 
 export default Utils;

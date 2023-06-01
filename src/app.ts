@@ -1,13 +1,14 @@
 import Utils from "utils";
 import VkGrpInfo from "vk";
 
-// console.log('hello');
-// Utils.getOffset();
 
-//VkGrpInfo.getWPosts()
-//VkGrpInfo.postDates();
 
-//VkGrpInfo.top10Posts('comments');
+//VkGrpInfo.getWPosts('2023-05-01T00:00','2023-05-31T23:59');
+
 
 
 VkGrpInfo.countComments();
+
+//VkGrpInfo.printTopComentator();
+
+//VkGrpInfo.printTop10posts('comments');
