@@ -72,6 +72,7 @@ class VkGrpInfo {
       if (reachedDate) {
         console.timeEnd('getWPosts');
         this.postDates();
+        Utils.writeOffset('DONE');
         return;
       }
       Utils.writeOffset(nextOffset);
@@ -100,6 +101,7 @@ class VkGrpInfo {
 
   postDates() {
     const posts = Utils.readPostsCSV();
+    if (!posts.length) return '';
     const lastPost = posts[posts.length - 2];
     const lastDate = new Date(
       Number(lastPost.split(',')[2] + '000'),
@@ -152,6 +154,10 @@ class VkGrpInfo {
       }
          ${this.postDates()}`);
       console.table(format);
+      return {
+        dates: this.postDates(),
+        data: format,
+      };
     } catch (error) {
       console.error(error);
     }
@@ -233,6 +239,8 @@ class VkGrpInfo {
           for (let j = 0; j < items.length; j++) {
             const { from_id, thread, id } = items[j];
             res[from_id] = res[from_id] ? res[from_id] + 1 : 1;
+            //!
+            Utils.commentCsv(from_id, id);
             //hande comment thread
             if (thread.count > 0) {
               const threadComments = await this.commentThread(thread, id);
@@ -257,18 +265,22 @@ class VkGrpInfo {
       const res = {} as { [key: number]: number };
       const { items, count } = thread;
       if (count <= 10) {
-        items.forEach(
-          (el) => (res[el.from_id] = res[el.from_id] ? res[el.from_id] + 1 : 1),
-        );
+        items.forEach((el) => {
+          res[el.from_id] = res[el.from_id] ? res[el.from_id] + 1 : 1;
+          //!
+          Utils.commentCsv(el.from_id, el.id);
+        });
         return res;
       }
 
       // create loop based on count and iterate to fetch all comments with OFFset in vk script
       for (let i = 0; i < count + 100; i += 100) {
         const data = await this.vkScriptThreads(3295343, commentId, i);
-        data?.response.items.forEach(
-          (el) => (res[el.from_id] = res[el.from_id] ? res[el.from_id] + 1 : 1),
-        );
+        data?.response.items.forEach((el) => {
+          res[el.from_id] = res[el.from_id] ? res[el.from_id] + 1 : 1;
+          //!
+          Utils.commentCsv(el.from_id, el.id);
+        });
         await Utils.waiter(2000);
       }
       return res;
@@ -369,19 +381,27 @@ class VkGrpInfo {
 
       console.log(`     ТОП 20 ПОЛЬЗОВАТЕЛЕЙ ПО НАПИСАННЫМ ПОСТАМ | КОММЕНТЫ И ЛАЙКИ НА ПОСТАХ АВТОРА'
       ${this.postDates()}`);
-      console.table(serialized.reduce((acc, el, index) => {
+      const formatted = serialized.reduce((acc, el, index) => {
         acc[index + 1] = el;
         return acc;
-      }, {} as { [key: number]: { [key: string]: string | number } }));
+      }, {} as { [key: number]: { [key: string]: string | number } });
+      console.table(formatted);
+      return {
+        dates: this.postDates(),
+        data: formatted,
+      };
     } catch (error) {
       console.error(error);
     }
   }
 
   async printTopComentator() {
-    const data: { [key: string]: number } = JSON.parse(
-      Utils.readCommentsJson(),
-    );
+    const comments = Utils.readCommentsJson();
+    if (comments == 'no comments') {
+      console.log(comments);
+      return;
+    }
+    const data: { [key: string]: number } = JSON.parse(comments);
 
     const sorted = Object.entries(data)
       .sort((a, b) => b[1] - a[1])
@@ -409,6 +429,10 @@ class VkGrpInfo {
     console.log(`     ТОП 20 ПОЛЬЗОВАТЕЛЕЙ ПО КОММЕНТАРИЯМ'
 ${this.postDates()}`);
     console.table(serialize);
+    return {
+      dates: this.postDates(),
+      data: serialize,
+    };
   }
 }
 

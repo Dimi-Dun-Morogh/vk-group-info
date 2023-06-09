@@ -5,6 +5,7 @@
 для старта - npm run run
 
 комманды:
+<br>
 ![alt text](./img/help.JPG)
 ![alt text](./img/topcomment.JPG)
 ![alt text](./img/toppcomments.JPG)
@@ -13,4 +14,4 @@
 
 
 
-https://oauth.vk.com/authorize?client_id=51651492&display=page&redirect_uri=https://oauth.vk.com/blank.html&scope=friends,notify,photos,wall,email,mail,groups,stats,offline&response_type=token&v=5.74  пример ссылки для получения access token 
+https://oauth.vk.com/authorize?client_id=51651492&display=page&redirect_uri=https://oauth.vk.com/blank.html&scope=friends,notify,photos,wall,email,mail,groups,stats,offline&response_type=token&v=5.74  пример ссылки для получения access token

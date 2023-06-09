@@ -23,10 +23,10 @@ class Utils {
   }
 
   static readPostsCSV() {
-    const file = readFileSync(
-      path.join(process.cwd(), '/temp_data/postsInCsv.csv'),
-      { encoding: 'utf-8' },
-    );
+    const filePath = path.join(process.cwd(), '/temp_data/postsInCsv.csv');
+    const exists = existsSync(filePath);
+    if (!exists) return [];
+    const file = readFileSync(filePath, { encoding: 'utf-8' });
     return file.split('\n');
   }
 
@@ -58,16 +58,41 @@ class Utils {
 
   static readCommentsJson() {
     const filePath = path.join(process.cwd(), '/temp_data/comments.json');
+    const exists = existsSync(filePath);
+    if (!exists) return 'no comments';
     const data = readFileSync(filePath, { encoding: 'utf8' });
     return data;
   }
 
-  static wipeTemp () {
+  static wipeTemp() {
     const filePath = path.join(process.cwd(), '/temp_data');
     const exists = existsSync(filePath);
-    if(exists) rmSync(filePath, {force:true, recursive: true});
+    if (exists) rmSync(filePath, { force: true, recursive: true });
   }
 
+  static commentCsv(profileId: string | number, commentId: string | number) {
+    const filePath = path.join(process.cwd(), '/temp_data/comment.csv');
+    const csv = `\n${profileId},${commentId}`;
+    appendFileSync(filePath, csv);
+  }
+
+  static readCommentsCsv() {
+    const filePath = path.join(process.cwd(), '/temp_data/comment.csv');
+    const file = readFileSync(filePath, { encoding: 'utf-8' });
+    const arr = file.split('\n').slice(1);
+    // const filtered = arr.filter(el=>{
+    //   const [fId] = el.split(',');
+    //   return fId ==  '805675061'
+    // })
+    // const res = {} as any;
+
+    // filtered.forEach(el=>{
+    //   const[fId, id] = el.split(',')
+    //   res[id] = res[id] ? res[id] + 1 : 1
+    // })
+    // console.log(res)
+    return arr
+  }
 }
 
 export default Utils;

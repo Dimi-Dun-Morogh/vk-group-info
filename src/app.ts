@@ -1,57 +1,18 @@
-import { createInterface } from "readline/promises";
-import Utils from "utils";
-import VkGrpInfo from "vk";
+import router from 'routes';
+import cli from './cli';
+import express from 'express';
 
+import cors from 'cors';
+import Utils from 'utils';
 
-const rl = createInterface({
-  input: process.stdin,
-  output: process.stdout
-});
+cli();
 
-const helpMsg =`Добро пожаловать в vk-group-info
-Комманды:
-getwposts YYYY-MM-DDTHH:MM YYYY-MM-DDTHH:MM  -  начальная и конечная дата постов, пример
-getwposts 2023-05-01T00:00 2023-05-31T23:59
-----------------------------------------------------------------------------------------
-countcomments - запустит фетч комментов для ID постов спарсенных коммандой  getwposts
-----------------------------------------------------------------------------------------
-topcomment - выведет в консоль топ 20 комментаторов
-----------------------------------------------------------------------------------------
-topposts |filter|  - выведет в консоль топ 20 постов, фильтр  likes||comments
-пример topposts likes
-----------------------------------------------------------------------------------------
-topposters - выведет в консоль топ 20 постеров по количеству постов
-----------------------------------------------------------------------------------------
-help - показать это сообщение снова
-`
+const web = express();
 
-console.log(helpMsg)
-rl.on('line', async (line) => {
-  switch (line.split(' ')[0]) {
-    case 'topposters':
-        await VkGrpInfo.printTopPosters();
-      break;
-    case 'topposts': {
-      const filter = line.split(' ')[1];
-     if(filter == 'likes' || filter == 'comments') {
-      await VkGrpInfo.printTop10posts(filter)
-     }
+web.use(express.json());
 
-      break;
-    }
-    case 'topcomment':
-      await VkGrpInfo.printTopComentator();
-    break;
-    case 'countcomments':
-      await VkGrpInfo.countComments()
-    break;
-    case 'getwposts':
-      Utils.wipeTemp();
-      const [c, date1, date2] = line.split(' ');
-      await VkGrpInfo.getWPosts(date1, date2)
-    break;
-    default:
-      console.log(helpMsg)
-      break;
-  }
-});
+web.use('/',router);
+
+web.use(cors());
+web.listen(3000);
+
