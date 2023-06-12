@@ -3,9 +3,24 @@
   <head>
     <meta charset="utf-8" />
     <title>s_1</title>
+
   </head>
   <body>
+    <div class="wrap-spinner d-none">
+    <div class="d-flex justify-content-center align-items-center h-100">
+      <div class="spinner-border " style="width: 6rem; height: 6rem;" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+    </div>
+    </div>
     <div class="container">
+      <div class="toast-wrapper">
+      <div class="toast bg-success fw-bold text-light" role="alert" id="myToast" aria-live="assertive" aria-atomic="true" data-bs-autohide="true" data-bs-delay="4000">
+        <div class="toast-body">
+          Hello, world! This is a toast message.
+        </div>
+      </div>
+    </div>
       <h1 class="text-center">vk-group-info</h1>
       <div class="row">
         <div class="col-3">
@@ -26,6 +41,9 @@
         <div class="col-9">
           <nav class="navbar bg-body-tertiary">
             <form class="container-fluid justify-content-center">
+              <button class="btn btn-outline-success me-2" type="button" id="FETCH">
+                ФЕТЧ ПОСТОВ
+              </button>
               <button class="btn btn-outline-success me-2" type="button">
                 ТОП ПОСТОВ
               </button>
@@ -40,12 +58,21 @@
         </div>
       </div>
       <div
-        class="border border-secondary-subtle"
+        class="border border-secondary-subtle d-flex"
         id="app"
-        style="height: 300px"
+        style="min-height: 300px"
       >
-        ...
+
+
+    <!-- <script type="text/javascript">
+        $(function() {
+            $('#datepicker').datepicker();
+        });
+    </script> -->
       </div>
+      </div>
+
     </div>
+
   </body>
 </html>

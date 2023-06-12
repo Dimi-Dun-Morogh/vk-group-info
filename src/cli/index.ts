@@ -47,7 +47,7 @@ export default ()=> {
       break;
       case 'getwposts':
         Utils.wipeTemp();
-        const [c, date1, date2] = line.split(' ');
+        const [, date1, date2] = line.split(' ');
         console.log(`getting posts for dates ${new Date(date1.trim()).toLocaleDateString()} - ${new Date(date2.trim()).toLocaleDateString()}`)
         await VkGrpInfo.getWPosts(date1, date2)
       break;

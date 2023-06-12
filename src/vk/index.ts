@@ -3,12 +3,10 @@ import {
   CommentsResponse,
   ItemPost,
   PostGetById,
-  ResponseWall,
   ResponseWallExec,
   Thread,
   ThreadResponse,
   UserResponse,
-  VkErr,
 } from 'types';
 import Utils from 'utils';
 
@@ -338,7 +336,7 @@ class VkGrpInfo {
   async printTopPosters() {
     try {
       const posts = Utils.readPostsCSV().reduce((acc, el) => {
-        const [pid, from_id, date, likes, comments] = el.split(',');
+        const [, from_id, , likes, comments] = el.split(',');
         const id = from_id;
         // if(!id) return acc;
         if (acc[id]) {

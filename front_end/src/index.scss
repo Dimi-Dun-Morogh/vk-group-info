@@ -1,2 +1,17 @@
 
-@import "bootstrap/scss/bootstrap"
+@import "bootstrap/scss/bootstrap";
+
+
+
+.wrap-spinner {
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  z-index: 999;
+  background-color: rgb(8 8 8 / 46%);
+}
+
+.toast-wrapper {position: absolute;
+top: 40%;
+left: 40%;
+z-index: 1000;}

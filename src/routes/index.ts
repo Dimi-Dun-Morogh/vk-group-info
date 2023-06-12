@@ -11,8 +11,10 @@ router.get('/wallposts', async (req: Request, res: Response) => {
       res.status(400).send('wrong dates');
       return;
     }
-    VkGrpInfo.getWPosts(String(start), String(end));
     console.log(start, end);
+    Utils.wipeTemp();
+    VkGrpInfo.getWPosts(String(start), String(end));
+
     res.status(200).send();
   } catch (error) {
     console.error(error);
@@ -23,7 +25,14 @@ router.get('/wallposts', async (req: Request, res: Response) => {
 router.get('/offset', async (req: Request, res: Response) => {
   try {
     const offset = Utils.getOffset();
-    res.status(200).send(offset);
+    const posts = Utils.readPostsCSV();
+    let dateStr = 'Пока что постов не найдено';
+    if(posts && posts[posts.length-2]) {
+      const [,,date] = posts[posts.length-2].split(',');
+      dateStr = new Date(+date*1000).toLocaleDateString('Ru-ru')
+    }
+
+    res.status(200).send(`${dateStr}&${offset}`);
   } catch (error) {
     console.error(error);
     res.sendStatus(500);

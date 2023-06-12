@@ -117,7 +117,7 @@ export interface Poll {
   votes: number
   disable_unvote: boolean
   anonymous: boolean
-  answer_ids: any[]
+  answer_ids: number[]
   embed_hash: string
   answers: Answer[]
   author_id: number
