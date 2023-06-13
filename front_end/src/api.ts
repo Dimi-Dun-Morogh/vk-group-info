@@ -19,6 +19,27 @@ class Api {
       console.error(error);
     }
   }
+
+  async dataStatus() {
+    try {
+      const data = await fetch(this.url + '/datastatus');
+      return await data.json();
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  async envStatus() {
+    try {
+      const data = await fetch(this.url + '/envstatus').then((d) => d.json());
+      return data as {
+        vk_token: string | undefined;
+        vk_grp_id: string | undefined;
+      };
+    } catch (error) {
+      console.error(error);
+    }
+  }
 }
 
 export default new Api();

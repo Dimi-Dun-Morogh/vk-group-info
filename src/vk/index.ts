@@ -1,6 +1,7 @@
 import config from 'config';
 import {
   CommentsResponse,
+  GrpInfoResponse,
   ItemPost,
   PostGetById,
   ResponseWallExec,
@@ -113,7 +114,7 @@ class VkGrpInfo {
       'Ru-ru',
     );
 
-    return `[${lastDate} -  ${firstDate}][всего постов - ${posts.length - 1}]`;
+    return `[${lastDate} -  ${firstDate}][всего постов - ${posts.length - 2}]`;
   }
 
   async printTop10posts(filter: 'likes' | 'comments') {
@@ -431,6 +432,17 @@ ${this.postDates()}`);
       dates: this.postDates(),
       data: serialize,
     };
+  }
+
+  async grpInfo() {
+    try {
+      const url = `https://api.vk.com/method/groups.getById?group_id=${vk_grp_id?.slice(1)}&access_token=${vk_token}&v=5.131`;
+      const data: GrpInfoResponse = await fetch(url).then((d) => d.json());
+      console.log(data)
+      return data.response[0];
+    } catch (error) {
+      console.error(error)
+    }
   }
 }
 

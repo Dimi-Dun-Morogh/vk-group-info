@@ -11,16 +11,36 @@ class UI {
     this.app.innerHTML = '';
   }
 
-  initialScreen() {
-    const state = false;
+  async popEnv() {
+    try {
+      const data = await api.envStatus();
+      const tokenSt = document.getElementById('vk-token');
+      const grpSt = document.getElementById('vk-grp-id');
+      tokenSt.innerHTML = data.vk_token ? 'OK' : 'NOT SET';
+      grpSt.innerHTML = data.vk_grp_id ? data.vk_grp_id : 'NOT SET';
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  async initialScreen() {
+    this.NavBtnsState();
+    this.toggleSpinner();
+    const data = await api.dataStatus();
+    this.toggleSpinner();
     this.wipeRoot();
     let html = '';
-    if (!state) {
-      html =
-        '<h1 class="text-center">ДАМП С ПОСТАМИ ЕЩЕ НЕ СОЗДАН. НАЖМИТЕ ФЕТЧ ПОСТОВ</h1>';
+    if (!data || !data.text.length) {
+      html = `<h1 class="text-center">ДАМП С ПОСТАМИ ЕЩЕ НЕ СОЗДАН. НАЖМИТЕ ФЕТЧ ПОСТОВ</h1>
+        `;
     } else {
-      html =
-        '<h1 class="text-center">ПОСТОВ - 3333. ДАТЫ 2023-06-06 14:14 - 2023-06-06 19:14</h1>';
+      html = `
+      <div class="d-flex justify-content-center">
+      <img src="${data.img}"/>
+      </div>
+      <h1 class="text-center">${data.text}</h1>
+
+      `;
     }
     this.app.innerHTML = `
     <div class="align-self-center flex-fill">
@@ -112,10 +132,19 @@ ${months.reduce((acc, el, index) => {
 </div>
 `;
     this.app.innerHTML = html;
-    this.toggleButtonState('#FETCH');
+    //this.toggleButtonState('#FETCH');
+    this.NavBtnsState('#FETCH');
     document
       .getElementById('FETCH_POSTS')
       .addEventListener('click', this.fetchBtnHandler.bind(this));
+  }
+
+  private NavBtnsState(id?: string) {
+    const allBtns = document.querySelectorAll('.navbar button');
+    allBtns.forEach((el) => el.classList.remove('active'));
+    if (id) {
+      this.toggleButtonState(id);
+    }
   }
 
   toggleButtonState(id: string) {
@@ -163,16 +192,19 @@ ${months.reduce((acc, el, index) => {
     await api.fetchPosts(dateString);
     // launch spinner
     this.toggleSpinner();
-   this.intervalId = setInterval(async () => {
+    this.intervalId = setInterval(async () => {
       const offsetNdate = await api.offsetStatus();
-      const [date, offset] = offsetNdate.split('&')
-      const nodeToast = document.getElementById('myToast')
+      const [date, offset] = offsetNdate.split('&');
+      const nodeToast = document.getElementById('myToast');
       const toast = bootstrap.Toast.getOrCreateInstance(nodeToast);
-      nodeToast.querySelector('.toast-body').innerHTML = `Дата текущего поста - ${date}  оффсет - ${offset}`;
+      nodeToast.querySelector(
+        '.toast-body',
+      ).innerHTML = `Дата текущего поста - ${date}  оффсет - ${offset}`;
 
       if (offset === 'DONE') {
         clearInterval(this.intervalId);
         this.toggleSpinner();
+        this.initialScreen();
       }
       toast.show();
       console.log(offset);
@@ -186,7 +218,3 @@ ${months.reduce((acc, el, index) => {
 }
 
 export default UI;
-
-export function datepicker() {
-  throw new Error('Function not implemented.');
-}
