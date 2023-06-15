@@ -33,6 +33,7 @@ router.get('/datastatus', async (req: Request, res: Response) => {
       groupStr = `\n[${grpInfo.name} - id ${grpInfo.id}]`
       data.text = postDates+groupStr;
       data.img = grpInfo.photo_200
+      data.status = postDates
     }
     res.status(200).send(data);
   } catch (error) {
@@ -98,6 +99,7 @@ router.get('/countcomments', async (req: Request, res: Response) => {
 router.get('/topcomment', async (req: Request, res: Response) => {
   try {
     const data = await VkGrpInfo.printTopComentator();
+    if(data ==='no comments') return  res.status(200).send({err:data});
     res.status(200).send(data);
   } catch (error) {
     console.error(error);

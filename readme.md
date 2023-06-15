@@ -4,6 +4,10 @@
 
 для старта - npm run run
 
+web интерфейс - http://localhost:4000/
+<br>
+![alt text](./img/web.gif)
+
 комманды:
 <br>
 ![alt text](./img/help.JPG)

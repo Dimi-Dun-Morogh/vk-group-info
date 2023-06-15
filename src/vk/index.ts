@@ -122,37 +122,43 @@ class VkGrpInfo {
       const data = await this.top10Posts(filter);
       if (!data) return;
 
-      const format = data
-        .map((el) => {
-          return filter === 'comments'
-            ? {
-                Комментариев: el.comments,
-                Лайков: el.likes,
-                'Автор поста': el.author_name,
-                'Дата поста': new Date(
-                  Number(el.date + '000'),
-                ).toLocaleDateString('Ru-ru'),
-                ссылка: el.link,
-              }
-            : {
-                Лайков: el.likes,
-                Комментариев: el.comments,
-                'Автор поста': el.author_name,
-                'Дата поста': new Date(
-                  Number(el.date + '000'),
-                ).toLocaleDateString('Ru-ru'),
-                ссылка: el.link,
-              };
-        })
-        .reduce((acc, el, index) => {
-          acc[index + 1] = el;
-          return acc;
-        }, {} as { [key: number]: { [key: string]: string } });
+      const format = data.map((el) => {
+        return filter === 'comments'
+          ? {
+              Комментариев: el.comments,
+              Лайков: el.likes,
+              'Автор поста': el.author_name,
+              'Дата поста': new Date(
+                Number(el.date + '000'),
+              ).toLocaleDateString('Ru-ru'),
+              ссылка: el.link,
+              avatar: el.avatar
+            }
+          : {
+              Лайков: el.likes,
+              Комментариев: el.comments,
+              'Автор поста': el.author_name,
+              'Дата поста': new Date(
+                Number(el.date + '000'),
+              ).toLocaleDateString('Ru-ru'),
+              ссылка: el.link,
+              avatar: el.avatar
+            };
+      });
+
       console.log(`                     ТОП 20 ПОСТОВ ПО ${
         filter === 'comments' ? 'КОММЕНТАМ' : 'ЛАЙКАМ'
       }
          ${this.postDates()}`);
-      console.table(format);
+      console.table(
+        format.reduce((acc, el, index) => {
+          const consoleEl = {...el}
+          delete consoleEl.avatar;
+          acc[index + 1] = consoleEl;
+
+          return acc;
+        }, {} as { [key: number]: { [key: string]: string|undefined } }),
+      );
       return {
         dates: this.postDates(),
         data: format,
@@ -218,10 +224,12 @@ class VkGrpInfo {
         console.timeLog('countComments', postId);
         const data = await this.vkScriptComments(+postId, 0);
 
+
         if (!data || 'error' in data) continue;
 
         // console.log(data)
         const count = data.response.count;
+        if(count == 0) await Utils.waiter(500)
 
         for (let i = 0; i < count + 100; i += 100) {
           let loopData;
@@ -364,7 +372,7 @@ class VkGrpInfo {
           };
         });
       const idsToFetch = sorted.reduce((acc, el) => (acc += `${el.id},`), '');
-      const url = `https://api.vk.com/method/users.get?&user_ids=${encodeURIComponent(
+      const url = `https://api.vk.com/method/users.get?&fields=photo_100&user_ids=${encodeURIComponent(
         idsToFetch,
       )}&access_token=${vk_token}&v=5.131`;
       const usersGet: UserResponse = await fetch(url).then((d) => d.json());
@@ -375,19 +383,22 @@ class VkGrpInfo {
           'имя автора': `${author?.first_name} ${author?.last_name}`,
           КОМЕНТОВ: el.comments,
           ЛАЙКОВ: el.likes,
+          avatar: author?.photo_100
         };
       });
 
       console.log(`     ТОП 20 ПОЛЬЗОВАТЕЛЕЙ ПО НАПИСАННЫМ ПОСТАМ | КОММЕНТЫ И ЛАЙКИ НА ПОСТАХ АВТОРА'
       ${this.postDates()}`);
       const formatted = serialized.reduce((acc, el, index) => {
-        acc[index + 1] = el;
+        const consoleEl = {...el}
+        delete consoleEl.avatar;
+        acc[index + 1] = consoleEl;
         return acc;
-      }, {} as { [key: number]: { [key: string]: string | number } });
+      }, {} as { [key: number]: { [key: string]: string | number | undefined } });
       console.table(formatted);
       return {
         dates: this.postDates(),
-        data: formatted,
+        data: serialized,
       };
     } catch (error) {
       console.error(error);
@@ -398,7 +409,7 @@ class VkGrpInfo {
     const comments = Utils.readCommentsJson();
     if (comments == 'no comments') {
       console.log(comments);
-      return;
+      return comments;
     }
     const data: { [key: string]: number } = JSON.parse(comments);
 
@@ -409,12 +420,13 @@ class VkGrpInfo {
 
     const url = `https://api.vk.com/method/users.get?&user_ids=${encodeURIComponent(
       idsToFetch,
-    )}&access_token=${vk_token}&v=5.131`;
+    )}&fields=photo_100&access_token=${vk_token}&v=5.131`;
     const usersGet: UserResponse = await fetch(url).then((d) => d.json());
     const serialize = sorted
       .map((el) => {
         const [id, score] = el;
         const user = usersGet.response.find((usr) => usr.id == +id);
+        console.log(user);
         return {
           Комментатор: `${user?.first_name} ${user?.last_name}`,
           Комментариев: score,
@@ -428,20 +440,32 @@ class VkGrpInfo {
     console.log(`     ТОП 20 ПОЛЬЗОВАТЕЛЕЙ ПО КОММЕНТАРИЯМ'
 ${this.postDates()}`);
     console.table(serialize);
+
+    const serializeForWeb = sorted.map((el) => {
+      const [id, score] = el;
+      const user = usersGet.response.find((usr) => usr.id == +id);
+      return {
+        Комментатор: `${user?.first_name} ${user?.last_name}`,
+        Комментариев: score,
+        avatar: user?.photo_100,
+      };
+    });
     return {
       dates: this.postDates(),
-      data: serialize,
+      data: serializeForWeb,
     };
   }
 
   async grpInfo() {
     try {
-      const url = `https://api.vk.com/method/groups.getById?group_id=${vk_grp_id?.slice(1)}&access_token=${vk_token}&v=5.131`;
+      const url = `https://api.vk.com/method/groups.getById?group_id=${vk_grp_id?.slice(
+        1,
+      )}&access_token=${vk_token}&v=5.131`;
       const data: GrpInfoResponse = await fetch(url).then((d) => d.json());
-      console.log(data)
+      console.log(data);
       return data.response[0];
     } catch (error) {
-      console.error(error)
+      console.error(error);
     }
   }
 }

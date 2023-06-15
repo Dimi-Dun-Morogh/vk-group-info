@@ -4,10 +4,11 @@ const bootstrap = require('bootstrap')
 
 const ui = new UI();
 //ui.initialScreen();
-ui.buttonListener();
+ui.navButtonListener();
 // ui.fetchScreen();
 
 (async()=>{
   ui.popEnv();
   await ui.initialScreen();
+ //ui.topCommentatorScreen();
 })()

@@ -5,8 +5,9 @@
   "scripts": {
     "build": "rm -rf build/ && prettier --write src/ && tsc && tsc-alias",
     "start": "node  build/app.js",
-    "dev": "npx nodemon ./src/app.ts",
-    "run": "ts-node ./src/app.ts",
+    "dev": "npx nodemon ./src/app.ts --ignore ./front_end",
+    "front-end":"cd front_end  && npm run dev ",
+    "run": "start ts-node ./src/app.ts &&  start npm  run front-end",
     "lint": "eslint ./src",
     "lint:fix": "eslint ./src --fix"
   },

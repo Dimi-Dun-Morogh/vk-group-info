@@ -80,17 +80,6 @@ class Utils {
     const filePath = path.join(process.cwd(), '/temp_data/comment.csv');
     const file = readFileSync(filePath, { encoding: 'utf-8' });
     const arr = file.split('\n').slice(1);
-    // const filtered = arr.filter(el=>{
-    //   const [fId] = el.split(',');
-    //   return fId ==  '805675061'
-    // })
-    // const res = {} as any;
-
-    // filtered.forEach(el=>{
-    //   const[fId, id] = el.split(',')
-    //   res[id] = res[id] ? res[id] + 1 : 1
-    // })
-    // console.log(res)
     return arr
   }
 }

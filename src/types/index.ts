@@ -402,6 +402,7 @@ export interface User {
   first_name: string
   last_name: string
   can_access_closed: boolean
+  photo_100:string
   is_closed: boolean
 }
 
