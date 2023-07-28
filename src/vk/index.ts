@@ -75,7 +75,7 @@ class VkGrpInfo {
         return;
       }
       Utils.writeOffset(nextOffset);
-      await Utils.waiter();
+      await Utils.waiter(1000);
       this.getWPosts(startDate, endDate);
     } catch (error) {
       console.error(error);
@@ -186,12 +186,11 @@ class VkGrpInfo {
 
       //! тут полчить инфо о посте чтоб вписать нейм юзера и ссылку на пост
       const postIds = serialize.reduce(
-        (acc, item) => (acc += `${config.vk_grp_id}_${item.id}, `),
+        (acc, item) => (acc += `${config.vk_grp_id}_${item.id},`),
         '',
       );
-      const url = `https://api.vk.com/method/wall.getById?v=5.131&access_token=${config.vk_token}&posts=${postIds}&extended=1`;
+      const url = `https://api.vk.com/method/wall.getById?v=5.131&access_token=${config.vk_token}&posts=${postIds.slice(0, postIds.length-2)}&extended=1`;
       const data: PostGetById = await fetch(url).then((d) => d.json());
-
       const res = serialize.map((item) => {
         const author = data.response.profiles.find(
           (el) => el.id === +item.from_id,
@@ -236,7 +235,7 @@ class VkGrpInfo {
           if (i === 0) loopData = data;
           else {
             loopData = await this.vkScriptComments(+postId, i);
-            await Utils.waiter(1000);
+            await Utils.waiter(700);
           }
 
           if (!loopData || loopData.response.items.length === 0) break;
@@ -288,7 +287,7 @@ class VkGrpInfo {
           //!
           Utils.commentCsv(el.from_id, el.id);
         });
-        await Utils.waiter(2000);
+        await Utils.waiter(500);
       }
       return res;
     } catch (error) {
@@ -415,7 +414,7 @@ class VkGrpInfo {
 
     const sorted = Object.entries(data)
       .sort((a, b) => b[1] - a[1])
-      .slice(0, 20);
+      .slice(0, 100);
     const idsToFetch = sorted.reduce((acc, item) => (acc += `${item[0]},`), '');
 
     const url = `https://api.vk.com/method/users.get?&user_ids=${encodeURIComponent(
@@ -426,7 +425,6 @@ class VkGrpInfo {
       .map((el) => {
         const [id, score] = el;
         const user = usersGet.response.find((usr) => usr.id == +id);
-        console.log(user);
         return {
           Комментатор: `${user?.first_name} ${user?.last_name}`,
           Комментариев: score,
@@ -462,7 +460,6 @@ ${this.postDates()}`);
         1,
       )}&access_token=${vk_token}&v=5.131`;
       const data: GrpInfoResponse = await fetch(url).then((d) => d.json());
-      console.log(data);
       return data.response[0];
     } catch (error) {
       console.error(error);

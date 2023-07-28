@@ -20,3 +20,10 @@ z-index: 1000;}
   max-height: 700px;
   overflow: auto;
   }
+
+ .author-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+ }

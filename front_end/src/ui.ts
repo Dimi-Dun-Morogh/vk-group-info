@@ -168,7 +168,7 @@ ${months.reduce((acc, el, index) => {
 
       <div class="container-fluid col-md-12 my-3 d-flex flex-column align-items-center">
       <h5>ТОП КОММЕНТАТОРОВ\n${data.dates}</h5>
-      <div class="col-md-6  tbodyDiv" >
+      <div class="col-md-8  tbodyDiv" >
       <table class="table table-bordered table-dark table-striped text-center align-middle">
       <thead class="sticky-top">
         <tr>
@@ -182,7 +182,7 @@ ${months.reduce((acc, el, index) => {
           acc += `
           <tr>
           <th scope="row">${index + 1}</th>
-          <td class="text-start fw-bold"><img class="rounded-circle  mx-5" style="height:50px" src="${
+          <td class="text-start fw-bold author-col"><img class="rounded-circle  mx-5" style="height:50px" src="${
             el.avatar
           }"/>
           ${el.Комментатор}
@@ -219,8 +219,7 @@ ${months.reduce((acc, el, index) => {
         <th scope="col"> ${isLikes? 'Лайков' : 'Комментов' } </th>
         <th scope="col">${isLikes? 'Комментов' : 'Лайков' }</th>
         <th scope="col">Автор поста</th>
-        <th scope="col">Дата поста</th>
-        <th scope="col">ссылка</th>
+        <th scope="col">Дата/ссылка</th>
       </tr>
     </thead>
     <tbody>
@@ -232,13 +231,14 @@ ${months.reduce((acc, el, index) => {
 
         <td>${isLikes? el.Лайков: el.Комментариев}</td>
         <td>${!isLikes? el.Лайков: el.Комментариев}</td>
-        <td class="text-start fw-bold"><img class="rounded-circle  mx-5" style="height:50px" src="${
+        <td class="text-start author-col fw-bold"><img class="rounded-circle  mx-5" style="height:50px" src="${
           el.avatar
         }"/>
+        <span>
         ${el['Автор поста']}
+        </span>
         </td>
-        <td>${el['Дата поста']}</td>
-        <td><a href="${postLink}"> ${el.ссылка}</a></td>
+        <td>${el['Дата поста']} <a href="${postLink}"> ${el.ссылка.slice(10)}</a></td>
       </tr>
         `;
         return acc;
@@ -304,7 +304,7 @@ ${data.dates}</h5>
           <th scope="row">${index + 1}</th>
 
           <td>${el.ПОСТОВ}</td>
-          <td class="text-start fw-bold"><img class="rounded-circle  mx-5" style="height:50px" src="${
+          <td class="text-start fw-bold author-col"><img class="rounded-circle  mx-5" style="height:50px" src="${
             el.avatar
           }"/>
           ${el['имя автора']}
