@@ -374,6 +374,9 @@ export interface CommentsItem {
   owner_id: number
   parents_stack: any[]
   thread: Thread
+  likes: {
+    count:number
+  }
 }
 
 export interface Thread {

@@ -1,4 +1,5 @@
 import config from 'config';
+import Db from 'db/Db';
 import {
   CommentsResponse,
   GrpInfoResponse,
@@ -22,7 +23,7 @@ class VkGrpInfo {
    */
   async getWPosts(startDate: string, endDate: string) {
     try {
-      const offset = Number(Utils.getOffset());
+      const offset = Number(await Utils.getOffset());
       console.log('getWPosts', `current OFFSET IS ${offset}`);
       if (offset === 0) console.time('getWPosts');
       const nextOffset = offset + 300;
@@ -63,14 +64,15 @@ class VkGrpInfo {
         const toDrop = this.dateReached(p, startDate, endDate);
         if (toDrop) return;
         //   if(reachedDate) return;
-        Utils.writeCSV(p);
+
+        Db.writePost(p);
       });
 
       //! здесь прочекать на то что дата последнего поста не меньше первого числа 00 ночи этого месяца
 
       if (reachedDate) {
         console.timeEnd('getWPosts');
-        this.postDates();
+      await  this.postDates();
         Utils.writeOffset('DONE');
         return;
       }
@@ -98,23 +100,20 @@ class VkGrpInfo {
     return Number(lastDay) < postDate || Number(firstDay) > postDate;
   }
 
-  postDates() {
-    const posts = Utils.readPostsCSV();
-    if (!posts.length) return '';
-    const lastPost = posts[posts.length - 2];
-    const lastDate = new Date(
-      Number(lastPost.split(',')[2] + '000'),
-    ).toLocaleString('Ru-ru');
-    const firstPostdate = posts.reduce((acc, p) => {
-      const date = p.split(',')[2];
-      if (Number(date) > acc) acc = Number(date);
-      return acc;
-    }, 0);
-    const firstDate = new Date(Number(firstPostdate + '000')).toLocaleString(
+  async postDates() {
+    const done = (await Utils.getOffset()) === 'DONE';
+    if (!done) return '';
+    const data =
+      await Db.all(`SELECT MIN(date) AS earliest_date , MAX(date) as latest_date , COUNT(*) as post_count
+    FROM posts;`)  as {earliest_date:number, latest_date:number, post_count:number}[];
+
+    const lastDate = new Date(Number(data[0].earliest_date)).toLocaleString(
       'Ru-ru',
     );
-
-    return `[${lastDate} -  ${firstDate}][всего постов - ${posts.length - 2}]`;
+    const firstDate = new Date(Number(data[0].latest_date)).toLocaleString(
+      'Ru-ru',
+    );
+    return `[${lastDate} -  ${firstDate}][всего постов - ${data[0].post_count}]`;
   }
 
   async printTop10posts(filter: 'likes' | 'comments') {
@@ -128,39 +127,39 @@ class VkGrpInfo {
               Комментариев: el.comments,
               Лайков: el.likes,
               'Автор поста': el.author_name,
-              'Дата поста': new Date(
-                Number(el.date + '000'),
-              ).toLocaleDateString('Ru-ru'),
+              'Дата поста': new Date(Number(el.date)).toLocaleDateString(
+                'Ru-ru',
+              ),
               ссылка: el.link,
-              avatar: el.avatar
+              avatar: el.avatar,
             }
           : {
               Лайков: el.likes,
               Комментариев: el.comments,
               'Автор поста': el.author_name,
-              'Дата поста': new Date(
-                Number(el.date + '000'),
-              ).toLocaleDateString('Ru-ru'),
+              'Дата поста': new Date(Number(el.date)).toLocaleDateString(
+                'Ru-ru',
+              ),
               ссылка: el.link,
-              avatar: el.avatar
+              avatar: el.avatar,
             };
       });
 
       console.log(`                     ТОП 20 ПОСТОВ ПО ${
         filter === 'comments' ? 'КОММЕНТАМ' : 'ЛАЙКАМ'
       }
-         ${this.postDates()}`);
+         ${await this.postDates()}`);
       console.table(
         format.reduce((acc, el, index) => {
-          const consoleEl = {...el}
+          const consoleEl = { ...el };
           delete consoleEl.avatar;
           acc[index + 1] = consoleEl;
 
           return acc;
-        }, {} as { [key: number]: { [key: string]: string|undefined } }),
+        }, {} as { [key: number]: { [key: string]: string | undefined | number } }),
       );
       return {
-        dates: this.postDates(),
+        dates: await this.postDates(),
         data: format,
       };
     } catch (error) {
@@ -170,30 +169,20 @@ class VkGrpInfo {
 
   async top10Posts(filter: 'likes' | 'comments') {
     try {
-      const serialize = Utils.readPostsCSV()
-        .map((el) => {
-          const [id, from_id, date, likes, comments] = el.split(',');
-          return {
-            id,
-            from_id,
-            date,
-            likes,
-            comments,
-          };
-        })
-        .sort((a, b) => +b[filter] - +a[filter])
-        .slice(0, 20);
+      const posts = await Db.fetchTopPosts(filter);
 
       //! тут полчить инфо о посте чтоб вписать нейм юзера и ссылку на пост
-      const postIds = serialize.reduce(
+      const postIds = posts.reduce(
         (acc, item) => (acc += `${config.vk_grp_id}_${item.id},`),
         '',
       );
-      const url = `https://api.vk.com/method/wall.getById?v=5.131&access_token=${config.vk_token}&posts=${postIds.slice(0, postIds.length-2)}&extended=1`;
+      const url = `https://api.vk.com/method/wall.getById?v=5.131&access_token=${
+        config.vk_token
+      }&posts=${postIds.slice(0, postIds.length - 1)}&extended=1`;
       const data: PostGetById = await fetch(url).then((d) => d.json());
-      const res = serialize.map((item) => {
+      const res = posts.map((item) => {
         const author = data.response.profiles.find(
-          (el) => el.id === +item.from_id,
+          (el) => el.id === +item.author_id,
         );
         return {
           ...item,
@@ -211,30 +200,25 @@ class VkGrpInfo {
   async countComments() {
     try {
       console.time('countComments');
-      const posts = Utils.readPostsCSV();
-      const postIds = posts.slice(0, posts.length - 1).map((el) => {
-        const [id] = el.split(',');
-        return id;
-      });
+      const postIds = await Db.all("SELECT id FROM posts") as {id:number}[];
 
       const res = {} as { [key: number]: number };
 
       for (const postId of postIds) {
         console.timeLog('countComments', postId);
-        const data = await this.vkScriptComments(+postId, 0);
-
+        const data = await this.vkScriptComments(postId.id, 0);
 
         if (!data || 'error' in data) continue;
 
         // console.log(data)
         const count = data.response.count;
-        if(count == 0) await Utils.waiter(500)
+        if (count == 0) await Utils.waiter(500);
 
         for (let i = 0; i < count + 100; i += 100) {
           let loopData;
           if (i === 0) loopData = data;
           else {
-            loopData = await this.vkScriptComments(+postId, i);
+            loopData = await this.vkScriptComments(postId.id, i);
             await Utils.waiter(700);
           }
 
@@ -245,8 +229,9 @@ class VkGrpInfo {
           for (let j = 0; j < items.length; j++) {
             const { from_id, thread, id } = items[j];
             res[from_id] = res[from_id] ? res[from_id] + 1 : 1;
-            //!
-            Utils.commentCsv(from_id, id);
+
+            //!write to db;
+            await Db.writeComment(items[j]);
             //hande comment thread
             if (thread.count > 0) {
               const threadComments = await this.commentThread(thread, id);
@@ -258,8 +243,7 @@ class VkGrpInfo {
           }
         }
       }
-      // console.log(res);
-      Utils.writeCommentsJson(res);
+      Utils.writeCommentsStatus('ok');
       console.timeEnd('countComments');
     } catch (error) {
       console.error(error);
@@ -274,7 +258,7 @@ class VkGrpInfo {
         items.forEach((el) => {
           res[el.from_id] = res[el.from_id] ? res[el.from_id] + 1 : 1;
           //!
-          Utils.commentCsv(el.from_id, el.id);
+          Db.writeComment(el);
         });
         return res;
       }
@@ -285,7 +269,7 @@ class VkGrpInfo {
         data?.response.items.forEach((el) => {
           res[el.from_id] = res[el.from_id] ? res[el.from_id] + 1 : 1;
           //!
-          Utils.commentCsv(el.from_id, el.id);
+          Db.writeComment(el);
         });
         await Utils.waiter(500);
       }
@@ -303,7 +287,7 @@ class VkGrpInfo {
     try {
       const vkScript = `var grpId = ${config.vk_grp_id};
       var postId = ${postId};
-      var rootData = API.wall.getComments({owner_id:grpId, post_id: postId, offset: ${offset}, thread_items_count: 10, count: 100, comment_id: ${commentId}});
+      var rootData = API.wall.getComments({owner_id:grpId, need_likes:true, post_id: postId, offset: ${offset}, thread_items_count: 10, count: 100, comment_id: ${commentId}});
       var commentsCount = rootData.response.count;
 
 
@@ -324,7 +308,7 @@ class VkGrpInfo {
     try {
       const vkScript = `var grpId = ${config.vk_grp_id};
       var postId = ${postId};
-      var rootData = API.wall.getComments({owner_id:grpId, post_id: postId, offset: ${offset}, thread_items_count: 10, count: 100});
+      var rootData = API.wall.getComments({owner_id:grpId, need_likes:true, post_id: postId, offset: ${offset}, thread_items_count: 10, count: 100});
       var commentsCount = rootData.response.count;
 
 
@@ -343,60 +327,38 @@ class VkGrpInfo {
 
   async printTopPosters() {
     try {
-      const posts = Utils.readPostsCSV().reduce((acc, el) => {
-        const [, from_id, , likes, comments] = el.split(',');
-        const id = from_id;
-        // if(!id) return acc;
-        if (acc[id]) {
-          acc[id].count = acc[id].count + 1;
-          acc[id].likes = acc[id].likes + +likes;
-          acc[id].comments = acc[id].comments + +comments;
-        } else {
-          acc[id] = {
-            count: 1,
-            likes: +likes,
-            comments: +comments,
-          };
-        }
-        //console.log(acc)
-        return acc;
-      }, {} as { [key: string]: { count: number; likes: number; comments: number } });
-      const sorted = Object.entries(posts)
-        .sort((a, b) => b[1].count - a[1].count)
-        .slice(0, 20)
-        .map((item) => {
-          return {
-            id: item[0],
-            ...item[1],
-          };
-        });
-      const idsToFetch = sorted.reduce((acc, el) => (acc += `${el.id},`), '');
+      const data = await Db.fetchTopPosters();
+      const idsToFetch = data.reduce(
+        (acc, el) => (acc += `${el.author_id},`),
+        '',
+      );
       const url = `https://api.vk.com/method/users.get?&fields=photo_100&user_ids=${encodeURIComponent(
         idsToFetch,
       )}&access_token=${vk_token}&v=5.131`;
       const usersGet: UserResponse = await fetch(url).then((d) => d.json());
-      const serialized = sorted.map((el) => {
-        const author = usersGet.response.find((au) => au.id == +el.id);
+      const serialized = data.map((el) => {
+        const author = usersGet.response.find((au) => au.id == +el.author_id);
         return {
-          ПОСТОВ: el.count,
+          ПОСТОВ: el.post_count,
           'имя автора': `${author?.first_name} ${author?.last_name}`,
-          КОМЕНТОВ: el.comments,
-          ЛАЙКОВ: el.likes,
-          avatar: author?.photo_100
+          КОМЕНТОВ: el.total_comments,
+          ЛАЙКОВ: el.total_likes,
+          avatar: author?.photo_100,
         };
       });
 
       console.log(`     ТОП 20 ПОЛЬЗОВАТЕЛЕЙ ПО НАПИСАННЫМ ПОСТАМ | КОММЕНТЫ И ЛАЙКИ НА ПОСТАХ АВТОРА'
-      ${this.postDates()}`);
+      ${await this.postDates()}`);
       const formatted = serialized.reduce((acc, el, index) => {
-        const consoleEl = {...el}
+        const consoleEl = { ...el };
         delete consoleEl.avatar;
         acc[index + 1] = consoleEl;
         return acc;
       }, {} as { [key: number]: { [key: string]: string | number | undefined } });
       console.table(formatted);
+
       return {
-        dates: this.postDates(),
+        dates: await this.postDates(),
         data: serialized,
       };
     } catch (error) {
@@ -404,30 +366,26 @@ class VkGrpInfo {
     }
   }
 
-  async printTopComentator() {
-    const comments = Utils.readCommentsJson();
-    if (comments == 'no comments') {
-      console.log(comments);
-      return comments;
-    }
-    const data: { [key: string]: number } = JSON.parse(comments);
-
-    const sorted = Object.entries(data)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 100);
-    const idsToFetch = sorted.reduce((acc, item) => (acc += `${item[0]},`), '');
-
+  async printTopComentator(filter: 'comments_count' | 'total_likes') {
+    console.log('hi')
+    const data = await Db.fetchTopCommentators(filter);
+    const idsToFetch = data.reduce(
+      (acc, item) => (acc += `${item.from_id},`),
+      '',
+    );
+      console.log(data, filter)
     const url = `https://api.vk.com/method/users.get?&user_ids=${encodeURIComponent(
       idsToFetch,
     )}&fields=photo_100&access_token=${vk_token}&v=5.131`;
     const usersGet: UserResponse = await fetch(url).then((d) => d.json());
-    const serialize = sorted
+    const serialize = data
       .map((el) => {
-        const [id, score] = el;
-        const user = usersGet.response.find((usr) => usr.id == +id);
+        const { from_id, comments_count, total_likes } = el;
+        const user = usersGet.response.find((usr) => usr.id == from_id);
         return {
           Комментатор: `${user?.first_name} ${user?.last_name}`,
-          Комментариев: score,
+          Комментариев: comments_count,
+          Лайков: total_likes,
         };
       })
       .reduce((acc, el, index) => {
@@ -436,20 +394,22 @@ class VkGrpInfo {
       }, {} as { [key: number]: { [key: string]: string | number } });
 
     console.log(`     ТОП 20 ПОЛЬЗОВАТЕЛЕЙ ПО КОММЕНТАРИЯМ'
-${this.postDates()}`);
+${await this.postDates()}`);
     console.table(serialize);
 
-    const serializeForWeb = sorted.map((el) => {
-      const [id, score] = el;
+    const serializeForWeb = data.map((el) => {
+      const { from_id: id, comments_count: score, total_likes } = el;
       const user = usersGet.response.find((usr) => usr.id == +id);
       return {
         Комментатор: `${user?.first_name} ${user?.last_name}`,
         Комментариев: score,
         avatar: user?.photo_100,
+        Лайков: total_likes,
       };
     });
+
     return {
-      dates: this.postDates(),
+      dates: await this.postDates(),
       data: serializeForWeb,
     };
   }

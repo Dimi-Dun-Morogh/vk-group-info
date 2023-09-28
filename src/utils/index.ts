@@ -1,34 +1,18 @@
+import Db from 'db/Db';
 import { mkdirSync, readFileSync, writeFileSync, rmSync } from 'fs';
 import { appendFileSync, existsSync } from 'fs';
 import path from 'path';
 import { ItemPost } from 'types';
 
 class Utils {
-  static createTmpDir() {
+  static async createTmpDir() {
     const filePath = path.join(process.cwd(), '/temp_data');
     const exists = existsSync(filePath);
-    if (!exists) mkdirSync(filePath);
-  }
-
-  static writeCSV(post: ItemPost) {
-    try {
-      const { from_id, likes, date, comments, id } = post;
-      const csv = `${id},${from_id},${date},${likes.count},${comments.count}\n`;
-      const filePath = path.join(process.cwd(), '/temp_data/postsInCsv.csv');
-      this.createTmpDir();
-      appendFileSync(filePath, csv);
-    } catch (error) {
-      console.error(error);
+    if (!exists) {mkdirSync(filePath);
+    await  Db.initTables();
     }
   }
 
-  static readPostsCSV() {
-    const filePath = path.join(process.cwd(), '/temp_data/postsInCsv.csv');
-    const exists = existsSync(filePath);
-    if (!exists) return [];
-    const file = readFileSync(filePath, { encoding: 'utf-8' });
-    return file.split('\n');
-  }
 
   static writeOffset(page: number | string) {
     this.createTmpDir();
@@ -36,8 +20,8 @@ class Utils {
     writeFileSync(filePath, String(page));
   }
 
-  static getOffset() {
-    this.createTmpDir();
+  static async getOffset() {
+   await this.createTmpDir();
     const filePath = path.join(process.cwd(), '/temp_data/offset');
     const exists = existsSync(filePath);
     if (!exists) return '0';
@@ -51,9 +35,17 @@ class Utils {
     });
   }
 
-  static writeCommentsJson(commentsObj: any) {
-    const filePath = path.join(process.cwd(), '/temp_data/comments.json');
-    writeFileSync(filePath, JSON.stringify(commentsObj));
+  static writeCommentsStatus(status:string) {
+    const filePath = path.join(process.cwd(), '/temp_data/comments.txt');
+    writeFileSync(filePath, status);
+  }
+
+  static readCommentsStatus() {
+    const filePath = path.join(process.cwd(), '/temp_data/comments.txt');
+    const exists = existsSync(filePath);
+    if (!exists) return 'no comments';
+   return  readFileSync(filePath).toString();
+
   }
 
   static readCommentsJson() {
@@ -67,21 +59,13 @@ class Utils {
   static wipeTemp() {
     const filePath = path.join(process.cwd(), '/temp_data');
     const exists = existsSync(filePath);
-    if (exists) rmSync(filePath, { force: true, recursive: true });
+    if (exists) {
+      rmSync(filePath, { force: true, recursive: true });
+
+    }
   }
 
-  static commentCsv(profileId: string | number, commentId: string | number) {
-    const filePath = path.join(process.cwd(), '/temp_data/comment.csv');
-    const csv = `\n${profileId},${commentId}`;
-    appendFileSync(filePath, csv);
-  }
 
-  static readCommentsCsv() {
-    const filePath = path.join(process.cwd(), '/temp_data/comment.csv');
-    const file = readFileSync(filePath, { encoding: 'utf-8' });
-    const arr = file.split('\n').slice(1);
-    return arr
-  }
 }
 
 export default Utils;

@@ -30,15 +30,16 @@ class UI {
     this.NavBtnsState('#MAIN');
     this.toggleSpinner();
     const data = await api.dataStatus();
+    console.log(data)
     this.toggleSpinner();
     this.wipeRoot();
     let html = '';
     if (!data || !data.status.length) {
       html = `<h1 class="text-center">ДАМП С ПОСТАМИ ЕЩЕ НЕ СОЗДАН. НАЖМИТЕ ФЕТЧ ПОСТОВ</h1>
         `;
-        this.disableNav()
+      this.disableNav();
     } else {
-      this.enableNav()
+      this.enableNav();
       html = `
       <div class="d-flex justify-content-center">
       <img src="${data.img}"/>
@@ -146,15 +147,16 @@ ${months.reduce((acc, el, index) => {
 
   async topCommentatorScreen() {
     try {
+       //'comments_count' || 'total_likes'
       this.NavBtnsState('#TOP_COMMENT');
       this.wipeRoot();
-      const data = await api.topCommentator();
+      const data = await api.topCommentator('comments_count');
 
       if ('err' in data) {
         this.toggleSpinner();
         await api.countComments();
         this.intervalId = setInterval(async () => {
-          const dataC = await api.topCommentator();
+          const dataC = await api.topCommentator('comments_count');
           if (!('err' in dataC)) {
             this.toggleSpinner();
             this.topCommentatorScreen();
@@ -163,11 +165,13 @@ ${months.reduce((acc, el, index) => {
         }, 5000);
         return;
       }
-
+      const data2 = await api.topCommentator('total_likes');
+      console.log(data, data2)
+      if ('err' in data2) return;
       const html = `
 
       <div class="container-fluid col-md-12 my-3 d-flex flex-column align-items-center">
-      <h5>ТОП КОММЕНТАТОРОВ\n${data.dates}</h5>
+      <h5 class="text-center">ТОП КОММЕНТАТОРОВ  <br> и ЛАЙКОВ НА ИХ КОМЕНТАРИЯХ\n${data.dates}</h5>
       <div class="col-md-8  tbodyDiv" >
       <table class="table table-bordered table-dark table-striped text-center align-middle">
       <thead class="sticky-top">
@@ -175,6 +179,7 @@ ${months.reduce((acc, el, index) => {
           <th scope="col">Место</th>
           <th scope="col">Комментатор</th>
           <th scope="col">Комментариев</th>
+          <th scope="col">Лайков</th>
         </tr>
       </thead>
       <tbody>
@@ -188,6 +193,7 @@ ${months.reduce((acc, el, index) => {
           ${el.Комментатор}
           </td>
           <td>${el.Комментариев}</td>
+          <td>${el.Лайков}</td>
         </tr>
           `;
           return acc;
@@ -195,6 +201,37 @@ ${months.reduce((acc, el, index) => {
       </tbody>
     </table>
         </div>
+
+        <h5 class="text-center">ТОП КОММЕНТАТОРОВ<br>  ПО ЛАЙКАМ НА ИХ КОМЕНТАРИЯХ\n${data.dates}</h5>
+        <div class="col-md-8  tbodyDiv" >
+        <table class="table table-bordered table-dark table-striped text-center align-middle">
+        <thead class="sticky-top">
+          <tr>
+            <th scope="col">Место</th>
+            <th scope="col">Комментатор</th>
+            <th scope="col">Комментариев</th>
+            <th scope="col">Лайков</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${data2.data.reduce((acc, el, index) => {
+            acc += `
+            <tr>
+            <th scope="row">${index + 1}</th>
+            <td class="text-start fw-bold author-col"><img class="rounded-circle  mx-5" style="height:50px" src="${
+              el.avatar
+            }"/>
+            ${el.Комментатор}
+            </td>
+            <td>${el.Комментариев}</td>
+            <td>${el.Лайков}</td>
+          </tr>
+            `;
+            return acc;
+          }, '')}
+        </tbody>
+      </table>
+          </div>
 
     </div>
       `;
@@ -204,33 +241,37 @@ ${months.reduce((acc, el, index) => {
     }
   }
 
-  private topPostsTable(data:PostStatResp, filter:'likes'|'comments') {
+  private topPostsTable(data: PostStatResp, filter: 'likes' | 'comments') {
     const isLikes = filter == 'likes';
     const html = `
 
 
     <div class="col-md-10" >
-    <h5 class="text-center">ТОП ПОСТОВ ПО ${isLikes? 'ЛАЙКАМ' : 'КОММЕНТАМ' } ${data.dates}</h5>
+    <h5 class="text-center">ТОП ПОСТОВ ПО ${isLikes ? 'ЛАЙКАМ' : 'КОММЕНТАМ'} ${
+      data.dates
+    }</h5>
     <div class="tbodyDiv">
     <table class="table table-bordered table-dark table-striped text-center align-middle" >
     <thead class="sticky-top">
       <tr>
         <th scope="col">Место</th>
-        <th scope="col"> ${isLikes? 'Лайков' : 'Комментов' } </th>
-        <th scope="col">${isLikes? 'Комментов' : 'Лайков' }</th>
+        <th scope="col"> ${isLikes ? 'Лайков' : 'Комментов'} </th>
+        <th scope="col">${isLikes ? 'Комментов' : 'Лайков'}</th>
         <th scope="col">Автор поста</th>
         <th scope="col">Дата/ссылка</th>
       </tr>
     </thead>
     <tbody>
       ${data.data.reduce((acc, el, index) => {
-        const postLink = `https://vk.com/club${this.grpId.slice(1)}?w=wall${el.ссылка}`
+        const postLink = `https://vk.com/club${this.grpId.slice(1)}?w=wall${
+          el.ссылка
+        }`;
         acc += `
         <tr>
         <th scope="row">${index + 1}</th>
 
-        <td>${isLikes? el.Лайков: el.Комментариев}</td>
-        <td>${!isLikes? el.Лайков: el.Комментариев}</td>
+        <td>${isLikes ? el.Лайков : el.Комментариев}</td>
+        <td>${!isLikes ? el.Лайков : el.Комментариев}</td>
         <td class="text-start author-col fw-bold"><img class="rounded-circle  mx-5" style="height:50px" src="${
           el.avatar
         }"/>
@@ -238,7 +279,9 @@ ${months.reduce((acc, el, index) => {
         ${el['Автор поста']}
         </span>
         </td>
-        <td>${el['Дата поста']} <a href="${postLink}"> ${el.ссылка.slice(10)}</a></td>
+        <td>${el['Дата поста']} <a href="${postLink}"> ${el.ссылка.slice(
+          10,
+        )}</a></td>
       </tr>
         `;
         return acc;
@@ -255,9 +298,9 @@ ${months.reduce((acc, el, index) => {
     try {
       this.wipeRoot();
       this.NavBtnsState('#TOPPOSTS');
-      this.toggleSpinner()
+      this.toggleSpinner();
       const { likes, comments } = await api.topPosts();
-      this.toggleSpinner()
+      this.toggleSpinner();
       const html = `
 
       <div class="container-fluid col-md-12 my-3 d-flex flex-column align-items-center">
@@ -279,7 +322,7 @@ ${months.reduce((acc, el, index) => {
       this.toggleButtonState('#TOPPOSTERS');
       const data = await api.topPosters();
       this.toggleSpinner();
-
+      console.log(data)
       const html = `
 
       <div class="container-fluid col-md-12 my-3 d-flex flex-column align-items-center">
@@ -324,21 +367,21 @@ ${data.dates}</h5>
       `;
       this.app.innerHTML = html;
     } catch (error) {
-      console.error(error)
+      console.error(error);
     }
   }
 
   private enableNav() {
     const allBtns = document.querySelectorAll('.navbar button');
-    allBtns.forEach(el=>el.classList.remove('disabled'))
+    allBtns.forEach((el) => el.classList.remove('disabled'));
   }
 
   private disableNav() {
     const allBtns = document.querySelectorAll('.navbar button');
-    allBtns.forEach(el=>{
-      if(el.id =='FETCH' || el.id =='MAIN') return;
-       el.classList.toggle('disabled')
-    })
+    allBtns.forEach((el) => {
+      if (el.id == 'FETCH' || el.id == 'MAIN') return;
+      el.classList.toggle('disabled');
+    });
   }
 
   private NavBtnsState(id?: string) {
@@ -376,9 +419,9 @@ ${data.dates}</h5>
           case 'TOPPOSTS':
             this.topPostsScreen();
             break;
-            case 'TOPPOSTERS':
-              this.topPostersScreen();
-              break;
+          case 'TOPPOSTERS':
+            this.topPostersScreen();
+            break;
           default:
             console.log(el);
             break;

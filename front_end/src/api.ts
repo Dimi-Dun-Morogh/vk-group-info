@@ -1,5 +1,5 @@
 class Api {
-  url = 'http://localhost:3000';
+  url = 'http://192.168.0.108:3000';
 
   async fetchPosts(date: string) {
     try {
@@ -41,9 +41,10 @@ class Api {
     }
   }
 
-  async topCommentator() {
+  async topCommentator(filter:string) {
     try {
-      const data = await fetch(this.url + '/topcomment').then((d) => {
+      //'comments_count' || 'total_likes'
+      const data = await fetch(this.url + '/topcomment?filter=' + filter).then((d) => {
       console.log(d)
         return   d.json()
       });
@@ -51,7 +52,7 @@ class Api {
         | {
             dates: string;
             data: [
-              { Комментатор: string; Комментариев: number; avatar: string },
+              { Комментатор: string; Комментариев: number;Лайков: number; avatar: string },
             ];
           }
         | {err:'no comments'};

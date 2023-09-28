@@ -40,7 +40,7 @@ export default ()=> {
         break;
       }
       case 'topcomment':
-        await VkGrpInfo.printTopComentator();
+        await VkGrpInfo.printTopComentator('comments_count');
       break;
       case 'countcomments':
         await VkGrpInfo.countComments()
