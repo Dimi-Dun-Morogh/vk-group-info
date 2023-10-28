@@ -4,6 +4,7 @@ import express from 'express';
 
 import cors from 'cors';
 import Db from 'db/Db';
+import Utils from 'utils';
 
 cli();
 
@@ -20,4 +21,5 @@ web.listen(3000);
   //  await Db.initTables();
   //  await db.writePost();
  //Db.fetchTopPosts();
+//  await Utils.getCommentsProgress();
 })()

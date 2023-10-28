@@ -1,5 +1,5 @@
 const bootstrap = require('bootstrap');
-import api, { PostStatResp } from './api';
+import api, { ComentatorsResp, PostStat, PostStatResp } from './api';
 class UI {
   app = document.querySelector('#app');
 
@@ -30,7 +30,7 @@ class UI {
     this.NavBtnsState('#MAIN');
     this.toggleSpinner();
     const data = await api.dataStatus();
-    console.log(data)
+    console.log(data);
     this.toggleSpinner();
     this.wipeRoot();
     let html = '';
@@ -147,7 +147,7 @@ ${months.reduce((acc, el, index) => {
 
   async topCommentatorScreen() {
     try {
-       //'comments_count' || 'total_likes'
+      //'comments_count' || 'total_likes'
       this.NavBtnsState('#TOP_COMMENT');
       this.wipeRoot();
       const data = await api.topCommentator('comments_count');
@@ -162,59 +162,47 @@ ${months.reduce((acc, el, index) => {
             this.topCommentatorScreen();
             clearInterval(this.intervalId);
           }
+          // progress bar
+          if ('progress' in dataC) {
+            this.wipeRoot();
+            const progData = dataC.progress;
+            this.commentsProgress(
+              progData.percent,
+              progData.current,
+              progData.totalPostsNum,
+            );
+          }
         }, 5000);
         return;
       }
       const data2 = await api.topCommentator('total_likes');
-      console.log(data, data2)
+      console.log(data, data2);
       if ('err' in data2) return;
-      const html = `
+      const renderTable = (
+        posts: ComentatorsResp,
+        mode: 'comments' | 'likes',
+      ) => {
+        const header =
+          mode === 'comments'
+            ? 'ТОП КОММЕНТАТОРОВ  <br> и ЛАЙКОВ НА ИХ КОМЕНТАРИЯХ'
+            : 'ТОП КОММЕНТАТОРОВ<br>  ПО ЛАЙКАМ НА ИХ КОМЕНТАРИЯХ';
 
-      <div class="container-fluid col-md-12 my-3 d-flex flex-column align-items-center">
-      <h5 class="text-center">ТОП КОММЕНТАТОРОВ  <br> и ЛАЙКОВ НА ИХ КОМЕНТАРИЯХ\n${data.dates}</h5>
-      <div class="col-md-8  tbodyDiv" >
-      <table class="table table-bordered table-dark table-striped text-center align-middle">
-      <thead class="sticky-top">
-        <tr>
-          <th scope="col">Место</th>
-          <th scope="col">Комментатор</th>
-          <th scope="col">Комментариев</th>
-          <th scope="col">Лайков</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${data.data.reduce((acc, el, index) => {
-          acc += `
-          <tr>
-          <th scope="row">${index + 1}</th>
-          <td class="text-start fw-bold author-col"><img class="rounded-circle  mx-5" style="height:50px" src="${
-            el.avatar
-          }"/>
-          ${el.Комментатор}
-          </td>
-          <td>${el.Комментариев}</td>
-          <td>${el.Лайков}</td>
-        </tr>
-          `;
-          return acc;
-        }, '')}
-      </tbody>
-    </table>
-        </div>
-
-        <h5 class="text-center">ТОП КОММЕНТАТОРОВ<br>  ПО ЛАЙКАМ НА ИХ КОМЕНТАРИЯХ\n${data.dates}</h5>
+        return ` <h5 class="text-center">${header}\n${posts.dates}</h5>
         <div class="col-md-8  tbodyDiv" >
         <table class="table table-bordered table-dark table-striped text-center align-middle">
         <thead class="sticky-top">
           <tr>
             <th scope="col">Место</th>
             <th scope="col">Комментатор</th>
-            <th scope="col">Комментариев</th>
-            <th scope="col">Лайков</th>
+            ${
+              mode === 'comments'
+                ? '<th scope="col">Комментариев</th><th scope="col">Лайков</th>'
+                : '<th scope="col">Лайков</th><th scope="col">Комментариев</th>'
+            }
           </tr>
         </thead>
         <tbody>
-          ${data2.data.reduce((acc, el, index) => {
+          ${posts.data.reduce((acc, el, index) => {
             acc += `
             <tr>
             <th scope="row">${index + 1}</th>
@@ -223,17 +211,28 @@ ${months.reduce((acc, el, index) => {
             }"/>
             ${el.Комментатор}
             </td>
-            <td>${el.Комментариев}</td>
+            ${
+              mode === 'comments'
+                ? `<td>${el.Комментариев}</td>
             <td>${el.Лайков}</td>
+            `
+                : `<td>${el.Лайков}</td>
+            <td>${el.Комментариев}</td>`
+            }
           </tr>
             `;
             return acc;
           }, '')}
         </tbody>
       </table>
-          </div>
+          </div>`;
+      };
+      const html = `
 
-    </div>
+      <div class="container-fluid col-md-12 my-3 d-flex flex-column align-items-center">
+      ${renderTable(data, 'comments')}
+      ${renderTable(data2, 'likes')}
+      </div>
       `;
       this.app.innerHTML = html;
     } catch (error) {
@@ -322,7 +321,7 @@ ${months.reduce((acc, el, index) => {
       this.toggleButtonState('#TOPPOSTERS');
       const data = await api.topPosters();
       this.toggleSpinner();
-      console.log(data)
+      console.log(data);
       const html = `
 
       <div class="container-fluid col-md-12 my-3 d-flex flex-column align-items-center">
@@ -471,6 +470,22 @@ ${data.dates}</h5>
   toggleSpinner() {
     const spinner = document.querySelector('.wrap-spinner');
     spinner.classList.toggle('d-none');
+  }
+
+  private progressBar(percent: number, min: number, max: number) {
+    const html = `
+    <div class="progress-wrapper d-flex w-100  align-items-center">
+    <div class="progress w-100 font-weight-bold" style="height:40px">
+    <div class="progress-bar bg-success progress-bar-striped progress-bar-animated font-weight-bold" role="progressbar" style="width: ${percent}%;" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"> <span style="font-weight:bold; font-size:large;"> ${percent}%;  ${min} из ${max} </span></div>
+  </div>
+  </div>
+    `;
+    return html;
+  }
+
+  private commentsProgress(percent: number, min: number, max: number) {
+    const html = this.progressBar(percent, min, max);
+    this.app.innerHTML = html;
   }
 }
 

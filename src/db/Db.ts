@@ -1,3 +1,4 @@
+import config from 'config';
 import { readFileSync } from 'fs';
 import path from 'path';
 import sqlite3 from 'sqlite3';
@@ -14,7 +15,7 @@ class Db {
         );
         throw new Error(err.message + `@${pathDb}`);
       } else {
-        console.log('connected to db' + `@${pathDb}`);
+        // console.log('connected to db' + `@${pathDb}`);
       }
     });
     db.configure("busyTimeout", 30000)
@@ -32,10 +33,10 @@ class Db {
           resolve(true);
         }
       });
-      console.log('closer')
+      // console.log('closer')
       db.close((error) => {
         if (error) console.error('error closing db', error);
-        else console.log('db closing ok');
+        // else console.log('db closing ok');
       });
     });
   }
@@ -110,7 +111,7 @@ class Db {
       likes?.count,
       date * 1000,
     ]).then((res) => {
-      console.log(`writing comment ${comment.id} success`);
+      // console.log(`writing comment ${comment.id} success`);
     });
   }
 
@@ -124,7 +125,9 @@ class Db {
   }
 
   async fetchTopPosts(filter: string) {
+    const ignore = config.vk_pf_ignore ? ` WHERE author_id NOT IN ( SELECT author_id FROM posts where author_id =${config.vk_pf_ignore}) ` : '';
     const data = await this.all(`SELECT * FROM posts
+${ignore}
 ORDER BY ${filter} DESC
 LIMIT 20;
 `);
@@ -139,11 +142,13 @@ LIMIT 20;
   }
 
   async fetchTopPosters() {
+    const ignore = config.vk_pf_ignore ? ` WHERE author_id NOT IN ( SELECT author_id FROM posts where author_id =${config.vk_pf_ignore}) ` : '';
     const data = await this.all(`
     SELECT author_id, COUNT(*) AS post_count,
     SUM(likes) AS total_likes,
     SUM(comments) AS total_comments
     FROM posts
+    ${ignore}
     GROUP BY author_id
     ORDER BY post_count DESC
     LIMIT 20
@@ -157,11 +162,14 @@ LIMIT 20;
   }
 
   async fetchTopCommentators(filter: 'comments_count' | 'total_likes') {
+    const ignore = config.vk_pf_ignore ? ` WHERE from_id NOT IN ( SELECT from_id FROM comments where from_id =${config.vk_pf_ignore}) ` : '';
+
     const data = await this.all(`
     SELECT from_id,
        COUNT(*) AS comments_count,
        SUM(likes) AS total_likes
        FROM comments
+       ${ignore}
        GROUP BY from_id
        ORDER BY ${filter} DESC
        LIMIT 20
@@ -172,6 +180,8 @@ LIMIT 20;
       total_likes: number;
     }[];
   }
+
+  async fetchSymbolsCount() {}
 }
 
 export default new Db();

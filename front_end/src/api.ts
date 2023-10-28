@@ -1,5 +1,5 @@
 class Api {
-  url = 'http://192.168.0.108:3000';
+  url = 'http://192.168.0.191:3000';
 
   async fetchPosts(date: string) {
     try {
@@ -55,7 +55,11 @@ class Api {
               { Комментатор: string; Комментариев: number;Лайков: number; avatar: string },
             ];
           }
-        | {err:'no comments'};
+        | {err:'no comments', progress:{
+          percent:number,
+          totalPostsNum: number,
+          current: number
+        }};
     } catch (error) {
       console.error(error);
     }
@@ -119,5 +123,11 @@ export interface topPosters {
   avatar: string
 }
 
+export interface ComentatorsResp {
+  dates: string;
+  data: [
+    { Комментатор: string; Комментариев: number;Лайков: number; avatar: string },
+  ];
+}
 
 export default new Api();

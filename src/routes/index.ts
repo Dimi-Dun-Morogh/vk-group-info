@@ -94,7 +94,10 @@ router.get('/countcomments', async (req: Request, res: Response) => {
 router.get('/topcomment', async (req: Request, res: Response) => {
   try {
     const status = Utils.readCommentsStatus();
-    if(status !=='ok') return  res.status(200).send({err:status});
+    if(status !=='ok') {
+      const progress = await Utils.getCommentsProgress();
+      return  res.status(200).send({err:status, progress:progress})
+    }
     const { filter } = req.query;
     console.log(filter)
     if(filter == 'comments_count' || filter == 'total_likes') {

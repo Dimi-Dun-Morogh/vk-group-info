@@ -204,7 +204,10 @@ class VkGrpInfo {
 
       const res = {} as { [key: number]: number };
 
-      for (const postId of postIds) {
+      for (const [index,postId] of postIds.entries()) {
+        //?will write index to file here for progress bar purposes
+        Utils.writeCommentProgress(index+1);
+
         console.timeLog('countComments', postId);
         const data = await this.vkScriptComments(postId.id, 0);
 
@@ -242,6 +245,7 @@ class VkGrpInfo {
             }
           }
         }
+        await Utils.getCommentsProgress();
       }
       Utils.writeCommentsStatus('ok');
       console.timeEnd('countComments');
