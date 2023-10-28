@@ -181,7 +181,29 @@ LIMIT 20;
     }[];
   }
 
-  async fetchSymbolsCount() {}
+  async fetchPostersByChars(){
+    const query = `SELECT author_id, sum(length(text)) AS total_chars,
+    COUNT(*) AS posts_count
+    from posts
+    GROUP BY author_id
+    ORDER BY total_chars DESC
+    LIMIT 20
+    ;`;
+    const data = await this.all(query);
+    return data as Array<{author_id:number,total_chars:number,posts_count:number}>
+  }
+
+  async fetchCommentatorsByChars(){
+    const query = `SELECT from_id, sum(length(text)) AS total_chars,
+    COUNT(*) AS comments_count
+     from comments
+    GROUP BY from_id
+    ORDER BY total_chars DESC
+    LIMIT 20
+    ;`;
+    const data = await this.all(query);
+    return data as Array<{from_id:number,total_chars:number,comments_count:number}>
+  }
 }
 
 export default new Db();

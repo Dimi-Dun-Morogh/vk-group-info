@@ -197,6 +197,80 @@ class VkGrpInfo {
     }
   }
 
+  async topPostersByChar(){
+    const data = await Db.fetchPostersByChars();
+    const idsToFetch = data.reduce(
+      (acc, el) => (acc += `${el.author_id},`),
+      '',
+    );
+    const url = `https://api.vk.com/method/users.get?&fields=photo_100&user_ids=${encodeURIComponent(
+      idsToFetch,
+    )}&access_token=${vk_token}&v=5.131`;
+    const usersGet: UserResponse = await fetch(url).then((d) => d.json());
+    const serialized = data.map((el) => {
+      const author = usersGet.response.find((au) => au.id == +el.author_id);
+      return {
+        СИМВОЛОВ: el.total_chars,
+        ПОСТОВ: el.posts_count,
+        'имя автора': `${author?.first_name} ${author?.last_name}`,
+        avatar: author?.photo_100,
+
+      };
+    });
+
+    console.log(`     ТОП 20 ПОСТЕРОВ ПО КОЛИЧЕСТВУ СИМВОЛОВ В ПОСТАХ'
+    ${await this.postDates()}`);
+    const formatted = serialized.reduce((acc, el, index) => {
+      const consoleEl = { ...el };
+      delete consoleEl.avatar;
+      acc[index + 1] = consoleEl;
+      return acc;
+    }, {} as { [key: number]: { [key: string]: string | number | undefined } });
+    console.table(formatted);
+
+    return {
+      dates: await this.postDates(),
+      data: serialized,
+    };
+  }
+
+  async topCommentatorsByChar(){
+    const data = await Db.fetchCommentatorsByChars();
+    const idsToFetch = data.reduce(
+      (acc, el) => (acc += `${el.from_id},`),
+      '',
+    );
+    const url = `https://api.vk.com/method/users.get?&fields=photo_100&user_ids=${encodeURIComponent(
+      idsToFetch,
+    )}&access_token=${vk_token}&v=5.131`;
+    const usersGet: UserResponse = await fetch(url).then((d) => d.json());
+    const serialized = data.map((el) => {
+      const author = usersGet.response.find((au) => au.id == +el.from_id);
+      return {
+        СИМВОЛОВ: el.total_chars,
+        КОМЕНТАРИЕВ: el.comments_count,
+        'имя автора': `${author?.first_name} ${author?.last_name}`,
+        avatar: author?.photo_100,
+
+      };
+    });
+
+    console.log(`     ТОП 20 КОММЕНАТОРОВ ПО КОЛИЧЕСТВУ СИМВОЛОВ В КОМЕНТАРИЯХ'
+    ${await this.postDates()}`);
+    const formatted = serialized.reduce((acc, el, index) => {
+      const consoleEl = { ...el };
+      delete consoleEl.avatar;
+      acc[index + 1] = consoleEl;
+      return acc;
+    }, {} as { [key: number]: { [key: string]: string | number | undefined } });
+    console.table(formatted);
+
+    return {
+      dates: await this.postDates(),
+      data: serialized,
+    };
+  }
+
   async countComments() {
     try {
       console.time('countComments');
