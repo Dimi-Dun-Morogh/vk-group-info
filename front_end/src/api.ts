@@ -41,25 +41,71 @@ class Api {
     }
   }
 
-  async topCommentator(filter:string) {
+  async topCommentator(filter: string) {
     try {
       //'comments_count' || 'total_likes'
-      const data = await fetch(this.url + '/topcomment?filter=' + filter).then((d) => {
-      console.log(d)
-        return   d.json()
-      });
+      const data = await fetch(this.url + '/topcomment?filter=' + filter).then(
+        (d) => {
+          console.log(d);
+          return d.json();
+        },
+      );
       return data as
         | {
             dates: string;
             data: [
-              { Комментатор: string; Комментариев: number;Лайков: number; avatar: string },
+              {
+                Комментатор: string;
+                Комментариев: number;
+                Лайков: number;
+                avatar: string;
+              },
             ];
           }
-        | {err:'no comments', progress:{
-          percent:number,
-          totalPostsNum: number,
-          current: number
-        }};
+        | {
+            err: 'no comments';
+            progress: {
+              percent: number;
+              totalPostsNum: number;
+              current: number;
+            };
+          };
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  async byChars(filter: string) {
+    try {
+      //'comments_count' || 'total_likes'
+      const data = await fetch(this.url + '/bychars?filter=' + filter).then(
+        (d) => {
+          console.log(d);
+          return d.json();
+        },
+      );
+      console.log(data)
+      return data as
+        | {
+            dates: string;
+            data: [
+              {
+                'имя автора': string;
+                КОМЕНТАРИЕВ: number;
+                ПОСТОВ: number;
+                avatar: string;
+                СИМВОЛОВ: number;
+              },
+            ];
+          }
+        | {
+            err: 'no comments';
+            progress: {
+              percent: number;
+              totalPostsNum: number;
+              current: number;
+            };
+          };
     } catch (error) {
       console.error(error);
     }
@@ -75,58 +121,69 @@ class Api {
 
   async topPosts() {
     try {
-      const dataLikes:PostStatResp = await fetch(this.url + '/topposts?filter=likes').then(d=>d.json());
-      const dataComments:PostStatResp = await fetch(this.url + '/topposts?filter=comments').then(d=>d.json());
+      const dataLikes: PostStatResp = await fetch(
+        this.url + '/topposts?filter=likes',
+      ).then((d) => d.json());
+      const dataComments: PostStatResp = await fetch(
+        this.url + '/topposts?filter=comments',
+      ).then((d) => d.json());
       return {
         likes: dataLikes,
-        comments: dataComments
-      }
+        comments: dataComments,
+      };
     } catch (error) {
-      console.error(error)
+      console.error(error);
     }
   }
 
   async topPosters() {
     try {
-      const data:respTopPosters = await fetch(this.url + '/topposters').then(d=>d.json());
-      return data
+      const data: respTopPosters = await fetch(this.url + '/topposters').then(
+        (d) => d.json(),
+      );
+      return data;
     } catch (error) {
-      console.error(error)
+      console.error(error);
     }
   }
 }
 
 export interface PostStatResp {
-  dates: string
-  data: PostStat[]
+  dates: string;
+  data: PostStat[];
 }
 
 export interface PostStat {
-  Лайков: string
-  Комментариев: string
-  "Автор поста": string
-  "Дата поста": string
-  ссылка: string
-  avatar: string
+  Лайков: string;
+  Комментариев: string;
+  'Автор поста': string;
+  'Дата поста': string;
+  ссылка: string;
+  avatar: string;
 }
 
 export interface respTopPosters {
-  dates: string
-  data: topPosters[]
+  dates: string;
+  data: topPosters[];
 }
 
 export interface topPosters {
-  ПОСТОВ: number
-  "имя автора": string
-  КОМЕНТОВ: number
-  ЛАЙКОВ: number
-  avatar: string
+  ПОСТОВ: number;
+  'имя автора': string;
+  КОМЕНТОВ: number;
+  ЛАЙКОВ: number;
+  avatar: string;
 }
 
 export interface ComentatorsResp {
   dates: string;
   data: [
-    { Комментатор: string; Комментариев: number;Лайков: number; avatar: string },
+    {
+      Комментатор: string;
+      Комментариев: number;
+      Лайков: number;
+      avatar: string;
+    },
   ];
 }
 

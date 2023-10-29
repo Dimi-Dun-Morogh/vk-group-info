@@ -77,65 +77,67 @@ class UI {
     const html = `
     <div class="d-flex align-items-center container flex-column pt-5">
     <div class="container d-flex justify-content-center fetch-posts">
-    <div class="mx-5 mt-3">
-    <h3 class="text-center">Дата старта</h3>
-<div class="flex-row align-items-start d-flex">
-<div class="input-group input-group-sm mb-3 " style="max-width:120px">
-  <span class="input-group-text" id="inputGroup-sizing-sm">Год</span>
-  <input type="number" id="startYear" value="${datenow.getFullYear()}" class="form-control " aria-label="Sizing example input" aria-describedby="inputGroup-sizing-sm">
-</div>
+      <div class="mx-5 mt-3">
+        <h3 class="text-center">Дата старта</h3>
+        <div class="flex-row align-items-start d-flex">
+          <div class="input-group input-group-sm mb-3 " style="max-width:120px">
+            <span class="input-group-text" id="inputGroup-sizing-sm">Год</span>
+            <input type="number" id="startYear" value="${datenow.getFullYear()}" class="form-control "
+              aria-label="Sizing example input" aria-describedby="inputGroup-sizing-sm">
+          </div>
 
-<div class="input-group input-group-sm mb-3">
-  <span class="input-group-text" id="inputGroup-sizing-sm">Месяц</span>
-  <select id="startMonth" class="form-select form-select-sm" aria-label=".form-select-sm example">
-  ${months.reduce((acc, el, index) => {
-    acc += `<option ${datenow.getMonth() == index ? 'selected' : ''} value="${
-      index + 1
-    }">${el}</option>`;
-    return acc;
-  }, '')}
-</select>
-</div>
+          <div class="input-group input-group-sm mb-3">
+            <span class="input-group-text" id="inputGroup-sizing-sm">Месяц</span>
+            <select id="startMonth" class="form-select form-select-sm" aria-label=".form-select-sm example">
+              ${months.reduce((acc, el, index) => {
+              acc += `<option ${datenow.getMonth()==index ? 'selected' : '' } value="${index + 1
+        }">${el}</option>`;
+              return acc;
+              }, '')}
+            </select>
+          </div>
 
-<div class="input-group input-group-sm mb-3" style="max-width:120px">
-  <span class="input-group-text" id="inputGroup-sizing-sm">День</span>
-  <input type="number" id="startDay" value="01" class="form-control" aria-label="Sizing example input" aria-describedby="inputGroup-sizing-sm">
-</div>
+          <div class="input-group input-group-sm mb-3" style="max-width:120px">
+            <span class="input-group-text" id="inputGroup-sizing-sm">День</span>
+            <input type="number" id="startDay" value="01" class="form-control" aria-label="Sizing example input"
+              aria-describedby="inputGroup-sizing-sm">
+          </div>
 
-</div>
-</div>
+        </div>
+      </div>
 
-<div class="mx-5 mt-3">
-<h3 class="text-center">Дата конца</h3>
-<div class="flex-row align-items-start d-flex">
-<div class="input-group input-group-sm mb-3 " style="max-width:120px">
-<span class="input-group-text" id="inputGroup-sizing-sm">Год</span>
-<input type="number" id="endYear" value="${datenow.getFullYear()}" class="form-control " aria-label="Sizing example input" aria-describedby="inputGroup-sizing-sm">
-</div>
+      <div class="mx-5 mt-3">
+        <h3 class="text-center">Дата конца</h3>
+        <div class="flex-row align-items-start d-flex">
+          <div class="input-group input-group-sm mb-3 " style="max-width:120px">
+            <span class="input-group-text" id="inputGroup-sizing-sm">Год</span>
+            <input type="number" id="endYear" value="${datenow.getFullYear()}" class="form-control "
+              aria-label="Sizing example input" aria-describedby="inputGroup-sizing-sm">
+          </div>
 
-<div class="input-group input-group-sm mb-3">
-<span class="input-group-text" id="inputGroup-sizing-sm">Месяц</span>
-<select id="endMonth" class="form-select form-select-sm" aria-label=".form-select-sm example">
-${months.reduce((acc, el, index) => {
-  acc += `<option ${datenow.getMonth() == index ? 'selected' : ''} value="${
-    index + 1
-  }">${el}</option>`;
-  return acc;
-}, '')}
-</select>
-</div>
+          <div class="input-group input-group-sm mb-3">
+            <span class="input-group-text" id="inputGroup-sizing-sm">Месяц</span>
+            <select id="endMonth" class="form-select form-select-sm" aria-label=".form-select-sm example">
+              ${months.reduce((acc, el, index) => {
+              acc += `<option ${datenow.getMonth()==index ? 'selected' : '' } value="${index + 1
+        }">${el}</option>`;
+              return acc;
+              }, '')}
+            </select>
+          </div>
 
-<div class="input-group input-group-sm mb-3" style="max-width:120px">
-<span class="input-group-text" id="inputGroup-sizing-sm">День</span>
-<input type="number" id="endDay" value="01" class="form-control" aria-label="Sizing example input" aria-describedby="inputGroup-sizing-sm">
-</div>
+          <div class="input-group input-group-sm mb-3" style="max-width:120px">
+            <span class="input-group-text" id="inputGroup-sizing-sm">День</span>
+            <input type="number" id="endDay" value="01" class="form-control" aria-label="Sizing example input"
+              aria-describedby="inputGroup-sizing-sm">
+          </div>
 
-</div>
-</div>
+        </div>
+      </div>
 
-</div>
-<button type="button" id="FETCH_POSTS" class="btn btn-primary w-25 mt-5">ОК</button>
-</div>
+    </div>
+    <button type="button" id="FETCH_POSTS" class="btn btn-primary w-25 mt-5">ОК</button>
+  </div>
 `;
     this.app.innerHTML = html;
     //this.toggleButtonState('#FETCH');
@@ -175,63 +177,18 @@ ${months.reduce((acc, el, index) => {
         }, 5000);
         return;
       }
-      const data2 = await api.topCommentator('total_likes');
-      console.log(data, data2);
-      if ('err' in data2) return;
-      const renderTable = (
-        posts: ComentatorsResp,
-        mode: 'comments' | 'likes',
-      ) => {
-        const header =
-          mode === 'comments'
-            ? 'ТОП КОММЕНТАТОРОВ  <br> и ЛАЙКОВ НА ИХ КОМЕНТАРИЯХ'
-            : 'ТОП КОММЕНТАТОРОВ<br>  ПО ЛАЙКАМ НА ИХ КОМЕНТАРИЯХ';
 
-        return ` <h5 class="text-center">${header}\n${posts.dates}</h5>
-        <div class="col-md-8  tbodyDiv" >
-        <table class="table table-bordered table-dark table-striped text-center align-middle">
-        <thead class="sticky-top">
-          <tr>
-            <th scope="col">Место</th>
-            <th scope="col">Комментатор</th>
-            ${
-              mode === 'comments'
-                ? '<th scope="col">Комментариев</th><th scope="col">Лайков</th>'
-                : '<th scope="col">Лайков</th><th scope="col">Комментариев</th>'
-            }
-          </tr>
-        </thead>
-        <tbody>
-          ${posts.data.reduce((acc, el, index) => {
-            acc += `
-            <tr>
-            <th scope="row">${index + 1}</th>
-            <td class="text-start fw-bold author-col"><img class="rounded-circle  mx-5" style="height:50px" src="${
-              el.avatar
-            }"/>
-            ${el.Комментатор}
-            </td>
-            ${
-              mode === 'comments'
-                ? `<td>${el.Комментариев}</td>
-            <td>${el.Лайков}</td>
-            `
-                : `<td>${el.Лайков}</td>
-            <td>${el.Комментариев}</td>`
-            }
-          </tr>
-            `;
-            return acc;
-          }, '')}
-        </tbody>
-      </table>
-          </div>`;
-      };
+      const commentatorByCount = await this.topCommentatorTable('comments_count');
+      const commentatorByLikes = await this.topCommentatorTable('total_likes');
+      const byCharsPosters = await this.byCharsTable('posts');
+      const byCharsComments = await this.byCharsTable('comments');
       const html = `
 
       <div class="container-fluid col-md-12 my-3 d-flex flex-column align-items-center">
-      ${renderTable(data, 'comments')}
-      ${renderTable(data2, 'likes')}
+      ${commentatorByCount}
+      ${commentatorByLikes}
+      ${byCharsPosters}
+      ${byCharsComments}
       </div>
       `;
       this.app.innerHTML = html;
@@ -240,15 +197,104 @@ ${months.reduce((acc, el, index) => {
     }
   }
 
+  private async topCommentatorTable(filter: 'comments_count' | 'total_likes') {
+    const data = await api.topCommentator(filter);
+    if ('err' in data) return;
+    const header =
+      filter === 'comments_count'
+        ? 'ТОП КОММЕНТАТОРОВ  <br> и ЛАЙКОВ НА ИХ КОМЕНТАРИЯХ'
+        : 'ТОП КОММЕНТАТОРОВ<br>  ПО ЛАЙКАМ НА ИХ КОМЕНТАРИЯХ';
+
+    const html = ` <h5 class="text-center">${header}\n${data.dates}</h5>
+<div class="col-md-8  tbodyDiv" >
+<table class="table table-bordered table-dark table-striped text-center align-middle">
+<thead class="sticky-top">
+  <tr>
+    <th scope="col">Место</th>
+    <th scope="col">Комментатор</th>
+    ${filter === 'comments_count'
+        ? '<th scope="col">Комментариев</th><th scope="col">Лайков</th>'
+        : '<th scope="col">Лайков</th><th scope="col">Комментариев</th>'
+      }
+  </tr>
+</thead>
+<tbody>
+  ${data.data.reduce((acc, el, index) => {
+        acc += `
+    <tr>
+    <th scope="row">${index + 1}</th>
+    <td class="text-start fw-bold author-col"><img class="rounded-circle  mx-5" style="height:50px" src="${el.avatar
+          }"/>
+    ${el.Комментатор}
+    </td>
+    ${filter === 'comments_count'
+            ? `<td>${el.Комментариев}</td>
+    <td>${el.Лайков}</td>
+    `
+            : `<td>${el.Лайков}</td>
+    <td>${el.Комментариев}</td>`
+          }
+  </tr>
+    `;
+        return acc;
+      }, '')}
+</tbody>
+</table>
+  </div>`;
+
+    return html;
+  }
+
+  private async byCharsTable(filter: 'posts' | 'comments') {
+    const data = await api.byChars(filter);
+    if ('err' in data) return;
+    const header = filter === 'posts' ? 'ТОП ПОСТЕРОВ' : 'ТОП КОММЕНТАТОРОВ';
+    const html = ` <h5 class="text-center">${header} ПО КОЛИЧЕСТВУ СИМВОЛОВ<br>${data.dates
+      }</h5>
+    <div class="col-md-8  tbodyDiv" >
+    <table class="table table-bordered table-dark table-striped text-center align-middle">
+    <thead class="sticky-top">
+      <tr>
+        <th scope="col">Место</th>
+        <th scope="col">Символов</th>
+        ${filter === 'comments'
+        ? '<th scope="col">Комментариев</th>'
+        : '<th scope="col">Постов</th>'
+      }
+        <th scope="col">Имя автора</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${data.data.reduce((acc, el, index) => {
+        acc += `
+        <tr>
+        <th scope="row">${index + 1}</th>
+        <td> ${el.СИМВОЛОВ}</td>
+        ${filter === 'comments'
+            ? `<td>${el.КОМЕНТАРИЕВ}</td>
+        `
+            : `<td>${el.ПОСТОВ}</td>`
+          }
+        <td class="text-start fw-bold author-col"><img class="rounded-circle  mx-5" style="height:50px" src="${el.avatar
+          }"/>
+        ${el['имя автора']}
+        </td>
+      </tr>
+        `;
+        return acc;
+      }, '')}
+    </tbody>
+  </table>
+      </div>`;
+    return html;
+  }
+
   private topPostsTable(data: PostStatResp, filter: 'likes' | 'comments') {
     const isLikes = filter == 'likes';
     const html = `
-
-
     <div class="col-md-10" >
-    <h5 class="text-center">ТОП ПОСТОВ ПО ${isLikes ? 'ЛАЙКАМ' : 'КОММЕНТАМ'} ${
-      data.dates
-    }</h5>
+    <h5 class="text-center">ТОП ПОСТОВ ПО ${isLikes ? 'ЛАЙКАМ' : 'КОММЕНТАМ'} ${data.dates
+      }</h5>
     <div class="tbodyDiv">
     <table class="table table-bordered table-dark table-striped text-center align-middle" >
     <thead class="sticky-top">
@@ -262,25 +308,23 @@ ${months.reduce((acc, el, index) => {
     </thead>
     <tbody>
       ${data.data.reduce((acc, el, index) => {
-        const postLink = `https://vk.com/club${this.grpId.slice(1)}?w=wall${
-          el.ссылка
-        }`;
+        const postLink = `https://vk.com/club${this.grpId.slice(1)}?w=wall${el.ссылка
+          }`;
         acc += `
         <tr>
         <th scope="row">${index + 1}</th>
 
         <td>${isLikes ? el.Лайков : el.Комментариев}</td>
         <td>${!isLikes ? el.Лайков : el.Комментариев}</td>
-        <td class="text-start author-col fw-bold"><img class="rounded-circle  mx-5" style="height:50px" src="${
-          el.avatar
-        }"/>
+        <td class="text-start author-col fw-bold"><img class="rounded-circle  mx-5" style="height:50px" src="${el.avatar
+          }"/>
         <span>
         ${el['Автор поста']}
         </span>
         </td>
         <td>${el['Дата поста']} <a href="${postLink}"> ${el.ссылка.slice(
-          10,
-        )}</a></td>
+            10,
+          )}</a></td>
       </tr>
         `;
         return acc;
@@ -327,7 +371,7 @@ ${months.reduce((acc, el, index) => {
       <div class="container-fluid col-md-12 my-3 d-flex flex-column align-items-center">
       <div class="col-md-10" >
       <h5 class="text-center"> ТОП 20 ПОЛЬЗОВАТЕЛЕЙ ПО НАПИСАННЫМ ПОСТАМ | КОММЕНТЫ И ЛАЙКИ НА ПОСТАХ АВТОРА
-${data.dates}</h5>
+    ${data.dates}</h5>
       <div  class="tbodyDiv">
       <table class="table table-bordered table-dark table-striped text-center align-middle" >
       <thead class="sticky-top">
@@ -341,13 +385,12 @@ ${data.dates}</h5>
       </thead>
       <tbody>
         ${data.data.reduce((acc, el, index) => {
-          acc += `
+        acc += `
           <tr>
           <th scope="row">${index + 1}</th>
 
           <td>${el.ПОСТОВ}</td>
-          <td class="text-start fw-bold author-col"><img class="rounded-circle  mx-5" style="height:50px" src="${
-            el.avatar
+          <td class="text-start fw-bold author-col"><img class="rounded-circle  mx-5" style="height:50px" src="${el.avatar
           }"/>
           ${el['имя автора']}
           </td>
@@ -356,8 +399,8 @@ ${data.dates}</h5>
 
         </tr>
           `;
-          return acc;
-        }, '')}
+        return acc;
+      }, '')}
       </tbody>
     </table>
     </div>
@@ -474,10 +517,21 @@ ${data.dates}</h5>
 
   private progressBar(percent: number, min: number, max: number) {
     const html = `
-    <div class="progress-wrapper d-flex w-100  align-items-center">
-    <div class="progress w-100 font-weight-bold" style="height:40px">
-    <div class="progress-bar bg-success progress-bar-striped progress-bar-animated font-weight-bold" role="progressbar" style="width: ${percent}%;" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"> <span style="font-weight:bold; font-size:large;"> ${percent}%;  ${min} из ${max} </span></div>
-  </div>
+    <div class="progress-wrapper d-flex w-100 align-items-center">
+    <div class="progress w-100 font-weight-bold" style="height: 40px">
+      <div
+        class="progress-bar bg-success progress-bar-striped progress-bar-animated font-weight-bold"
+        role="progressbar"
+        style="width: ${percent}%;"
+        aria-valuenow="25"
+        aria-valuemin="0"
+        aria-valuemax="100"
+      >
+        <span style="font-weight: bold; font-size: large">
+          ${percent}%; ${min} из ${max}
+        </span>
+      </div>
+    </div>
   </div>
     `;
     return html;

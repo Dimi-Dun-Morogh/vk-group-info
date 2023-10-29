@@ -81,6 +81,23 @@ router.get('/topposts', async (req: Request, res: Response) => {
   }
 });
 
+router.get('/bychars', async (req: Request, res: Response) => {
+  try {
+    const { filter } = req.query;
+    if (filter == 'posts' || filter == 'comments') {
+      const data = filter == 'posts' ? await VkGrpInfo.topPostersByChar()
+      : await VkGrpInfo.topCommentatorsByChar();
+      res.status(200).send(data);
+      return;
+    } else {
+      res.status(400).send('wrong filter');
+    }
+  } catch (error) {
+    console.error(error);
+    res.sendStatus(500);
+  }
+});
+
 router.get('/countcomments', async (req: Request, res: Response) => {
   try {
     VkGrpInfo.countComments();
