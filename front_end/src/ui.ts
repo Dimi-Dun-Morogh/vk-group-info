@@ -1,5 +1,12 @@
 const bootstrap = require('bootstrap');
-import api, { ComentatorsResp, PostStat, PostStatResp } from './api';
+import api, {
+  ComentatorsResp,
+  Comment,
+  Post,
+  PostStat,
+  PostStatResp,
+  vkProfile,
+} from './api';
 class UI {
   app = document.querySelector('#app');
 
@@ -90,9 +97,10 @@ class UI {
             <span class="input-group-text" id="inputGroup-sizing-sm">Месяц</span>
             <select id="startMonth" class="form-select form-select-sm" aria-label=".form-select-sm example">
               ${months.reduce((acc, el, index) => {
-              acc += `<option ${datenow.getMonth()==index ? 'selected' : '' } value="${index + 1
-        }">${el}</option>`;
-              return acc;
+                acc += `<option ${
+                  datenow.getMonth() == index ? 'selected' : ''
+                } value="${index + 1}">${el}</option>`;
+                return acc;
               }, '')}
             </select>
           </div>
@@ -119,9 +127,10 @@ class UI {
             <span class="input-group-text" id="inputGroup-sizing-sm">Месяц</span>
             <select id="endMonth" class="form-select form-select-sm" aria-label=".form-select-sm example">
               ${months.reduce((acc, el, index) => {
-              acc += `<option ${datenow.getMonth()==index ? 'selected' : '' } value="${index + 1
-        }">${el}</option>`;
-              return acc;
+                acc += `<option ${
+                  datenow.getMonth() == index ? 'selected' : ''
+                } value="${index + 1}">${el}</option>`;
+                return acc;
               }, '')}
             </select>
           </div>
@@ -178,7 +187,9 @@ class UI {
         return;
       }
 
-      const commentatorByCount = await this.topCommentatorTable('comments_count');
+      const commentatorByCount = await this.topCommentatorTable(
+        'comments_count',
+      );
       const commentatorByLikes = await this.topCommentatorTable('total_likes');
       const byCharsPosters = await this.byCharsTable('posts');
       const byCharsComments = await this.byCharsTable('comments');
@@ -189,6 +200,7 @@ class UI {
       ${commentatorByLikes}
       ${byCharsPosters}
       ${byCharsComments}
+      ${await this.alltop1s()}
       </div>
       `;
       this.app.innerHTML = html;
@@ -212,32 +224,35 @@ class UI {
   <tr>
     <th scope="col">Место</th>
     <th scope="col">Комментатор</th>
-    ${filter === 'comments_count'
+    ${
+      filter === 'comments_count'
         ? '<th scope="col">Комментариев</th><th scope="col">Лайков</th>'
         : '<th scope="col">Лайков</th><th scope="col">Комментариев</th>'
-      }
+    }
   </tr>
 </thead>
 <tbody>
   ${data.data.reduce((acc, el, index) => {
-        acc += `
+    acc += `
     <tr>
     <th scope="row">${index + 1}</th>
-    <td class="text-start fw-bold author-col"><img class="rounded-circle  mx-5" style="height:50px" src="${el.avatar
-          }"/>
+    <td class="text-start fw-bold author-col"><img class="rounded-circle  mx-5" style="height:50px" src="${
+      el.avatar
+    }"/>
     ${el.Комментатор}
     </td>
-    ${filter === 'comments_count'
-            ? `<td>${el.Комментариев}</td>
+    ${
+      filter === 'comments_count'
+        ? `<td>${el.Комментариев}</td>
     <td>${el.Лайков}</td>
     `
-            : `<td>${el.Лайков}</td>
+        : `<td>${el.Лайков}</td>
     <td>${el.Комментариев}</td>`
-          }
+    }
   </tr>
     `;
-        return acc;
-      }, '')}
+    return acc;
+  }, '')}
 </tbody>
 </table>
   </div>`;
@@ -249,18 +264,20 @@ class UI {
     const data = await api.byChars(filter);
     if ('err' in data) return;
     const header = filter === 'posts' ? 'ТОП ПОСТЕРОВ' : 'ТОП КОММЕНТАТОРОВ';
-    const html = ` <h5 class="text-center">${header} ПО КОЛИЧЕСТВУ СИМВОЛОВ<br>${data.dates
-      }</h5>
+    const html = ` <h5 class="text-center">${header} ПО КОЛИЧЕСТВУ СИМВОЛОВ<br>${
+      data.dates
+    }</h5>
     <div class="col-md-8  tbodyDiv" >
     <table class="table table-bordered table-dark table-striped text-center align-middle">
     <thead class="sticky-top">
       <tr>
         <th scope="col">Место</th>
         <th scope="col">Символов</th>
-        ${filter === 'comments'
-        ? '<th scope="col">Комментариев</th>'
-        : '<th scope="col">Постов</th>'
-      }
+        ${
+          filter === 'comments'
+            ? '<th scope="col">Комментариев</th>'
+            : '<th scope="col">Постов</th>'
+        }
         <th scope="col">Имя автора</th>
       </tr>
     </thead>
@@ -270,13 +287,15 @@ class UI {
         <tr>
         <th scope="row">${index + 1}</th>
         <td> ${el.СИМВОЛОВ}</td>
-        ${filter === 'comments'
+        ${
+          filter === 'comments'
             ? `<td>${el.КОМЕНТАРИЕВ}</td>
         `
             : `<td>${el.ПОСТОВ}</td>`
-          }
-        <td class="text-start fw-bold author-col"><img class="rounded-circle  mx-5" style="height:50px" src="${el.avatar
-          }"/>
+        }
+        <td class="text-start fw-bold author-col"><img class="rounded-circle  mx-5" style="height:50px" src="${
+          el.avatar
+        }"/>
         ${el['имя автора']}
         </td>
       </tr>
@@ -293,8 +312,9 @@ class UI {
     const isLikes = filter == 'likes';
     const html = `
     <div class="col-md-10" >
-    <h5 class="text-center">ТОП ПОСТОВ ПО ${isLikes ? 'ЛАЙКАМ' : 'КОММЕНТАМ'} ${data.dates
-      }</h5>
+    <h5 class="text-center">ТОП ПОСТОВ ПО ${isLikes ? 'ЛАЙКАМ' : 'КОММЕНТАМ'} ${
+      data.dates
+    }</h5>
     <div class="tbodyDiv">
     <table class="table table-bordered table-dark table-striped text-center align-middle" >
     <thead class="sticky-top">
@@ -308,23 +328,25 @@ class UI {
     </thead>
     <tbody>
       ${data.data.reduce((acc, el, index) => {
-        const postLink = `https://vk.com/club${this.grpId.slice(1)}?w=wall${el.ссылка
-          }`;
+        const postLink = `https://vk.com/club${this.grpId.slice(1)}?w=wall${
+          el.ссылка
+        }`;
         acc += `
         <tr>
         <th scope="row">${index + 1}</th>
 
         <td>${isLikes ? el.Лайков : el.Комментариев}</td>
         <td>${!isLikes ? el.Лайков : el.Комментариев}</td>
-        <td class="text-start author-col fw-bold"><img class="rounded-circle  mx-5" style="height:50px" src="${el.avatar
-          }"/>
+        <td class="text-start author-col fw-bold"><img class="rounded-circle  mx-5" style="height:50px" src="${
+          el.avatar
+        }"/>
         <span>
         ${el['Автор поста']}
         </span>
         </td>
         <td>${el['Дата поста']} <a href="${postLink}"> ${el.ссылка.slice(
-            10,
-          )}</a></td>
+          10,
+        )}</a></td>
       </tr>
         `;
         return acc;
@@ -385,12 +407,13 @@ class UI {
       </thead>
       <tbody>
         ${data.data.reduce((acc, el, index) => {
-        acc += `
+          acc += `
           <tr>
           <th scope="row">${index + 1}</th>
 
           <td>${el.ПОСТОВ}</td>
-          <td class="text-start fw-bold author-col"><img class="rounded-circle  mx-5" style="height:50px" src="${el.avatar
+          <td class="text-start fw-bold author-col"><img class="rounded-circle  mx-5" style="height:50px" src="${
+            el.avatar
           }"/>
           ${el['имя автора']}
           </td>
@@ -399,8 +422,8 @@ class UI {
 
         </tr>
           `;
-        return acc;
-      }, '')}
+          return acc;
+        }, '')}
       </tbody>
     </table>
     </div>
@@ -424,6 +447,98 @@ class UI {
       if (el.id == 'FETCH' || el.id == 'MAIN') return;
       el.classList.toggle('disabled');
     });
+  }
+
+  private async alltop1s() {
+    const data = await api.allTops1s();
+    const {post_by_likes, post_by_char, comment_by_likes, profiles, comment_by_char} = data;
+    const postByLikes = {...post_by_likes,profile:this.transformTop1s(post_by_likes, profiles)};
+    const commentByLikes = {...comment_by_likes, profile: this.transformTop1s(comment_by_likes, profiles)};
+    const postByChar = {...post_by_char, profile: this.transformTop1s(post_by_char, profiles)}
+    const commentByChar = {...comment_by_char, profile: this.transformTop1s(comment_by_char, profiles)}
+
+
+
+    const html = `
+    <div class="bg-dark text-white p-3">
+    <div class="d-flex flex-column justify-content-center fw-bold align-items-center">
+      <h5>Самый залайканный пост: </h5>
+      <span>лайков: ${postByLikes.likes}</span>
+      <span>автор: ${postByLikes.profile.full_name}<img class="d-block mx-auto" src="${
+      postByLikes.profile.avatar
+    }"></span>
+      <span>ссылка на пост: <a href="https://vk.com/club${this.grpId.slice(
+        1,
+      )}?w=wall${this.grpId}_${postByLikes.id}">w=wall${this.grpId}_${
+      postByLikes.id
+    }
+    </a>
+    </span>
+      </div>
+
+      <div class="d-flex flex-column justify-content-center fw-bold align-items-center">
+      <h5>Самый залайканный коммент: </h5>
+      <span>лайков: ${commentByLikes.likes}</span>
+      <span>автор: ${
+        commentByLikes.profile.full_name
+      }<img class="d-block mx-auto" src="${commentByLikes.profile.avatar}"></span>
+      <span>ссылка на коммент: <a href="https://vk.com/club${this.grpId.slice(
+        1,
+      )}?w=wall${this.grpId}_${commentByLikes?.post_id}_r${commentByLikes.id}">w=wall${this.grpId}_${commentByLikes?.post_id}_r${
+      commentByLikes.id
+    }
+    </a>
+    </span>
+      </div>
+
+
+      <div class="d-flex flex-column justify-content-center fw-bold align-items-center">
+      <h5>Самый длинный пост: </h5>
+      <span>символов: ${postByChar.post_length}</span>
+      <span>автор: ${
+        postByChar.profile.full_name
+      }<img class="d-block mx-auto" src="${postByChar.profile.avatar}"></span>
+      <span>ссылка на пост: <a href="https://vk.com/club${this.grpId.slice(
+        1,
+      )}?w=wall${this.grpId}_${postByChar?.id}">w=wall${this.grpId}_${postByChar.id}
+    </a>
+    </span>
+      </div>
+
+      <div class="d-flex flex-column justify-content-center fw-bold align-items-center">
+      <h5>Самый длинный коммент: </h5>
+      <span>символов: ${commentByChar.comment_length}</span>
+      <span>автор: ${
+        commentByChar.profile.full_name
+      }<img class="d-block mx-auto" src="${commentByChar.profile.avatar}"></span>
+      <span>ссылка на коммент: <a href="https://vk.com/club${this.grpId.slice(
+        1,
+      )}?w=wall${this.grpId}_${commentByChar?.post_id}_r${commentByChar.id}">w=wall${this.grpId}_${commentByChar.post_id}_r${commentByChar.id}
+    </a>
+    </span>
+      </div>
+
+      </div>
+    `;
+
+    return html;
+  }
+
+  private transformTop1s(
+    data: Post | Comment,
+    profiles: { [key: number]: vkProfile },
+  ) {
+    let profile;
+    if ('author_id' in data) {
+      profile = profiles[data.author_id];
+    } else {
+      profile = profiles[data.from_id];
+    }
+    return {
+      avatar: profile.photo_100,
+      full_name: `${profile.first_name} ${profile.last_name}`,
+      vk_id: profile.id,
+    };
   }
 
   private NavBtnsState(id?: string) {

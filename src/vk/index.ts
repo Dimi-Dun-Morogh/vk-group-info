@@ -8,6 +8,7 @@ import {
   ResponseWallExec,
   Thread,
   ThreadResponse,
+  User,
   UserResponse,
 } from 'types';
 import Utils from 'utils';
@@ -502,6 +503,35 @@ ${await this.postDates()}`);
     } catch (error) {
       console.error(error);
     }
+  }
+
+  async allTop1s(){
+    const topLikedPost = await Db.top1likedPost();
+    const topLikedComment = await Db.top1likedComment();
+    const topPostByChar = await Db.top1PostByCHar();
+    const topCommentByChar = await Db.top1CommentByCHar();
+    const profilesTofetch = `${topLikedPost.author_id},${topLikedComment.from_id},${topPostByChar.author_id},${topCommentByChar.from_id}`;
+    const profiles = await this.profileData(profilesTofetch);
+
+    return {
+      post_by_likes: topLikedPost,
+      comment_by_likes: topLikedComment,
+      post_by_char: topPostByChar,
+      comment_by_char: topCommentByChar,
+      profiles
+    };
+
+  }
+
+  private async profileData(ids:string){
+    const url = `https://api.vk.com/method/users.get?&fields=photo_100&user_ids=${encodeURIComponent(
+      ids,
+    )}&access_token=${vk_token}&v=5.131`;
+    const usersGet: UserResponse = await fetch(url).then((d) => d.json());
+    return usersGet.response.reduce((acc,el)=>{
+      acc[el.id] = el;
+      return acc;
+    }, {} as {[key:number]:User});
   }
 }
 

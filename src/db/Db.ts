@@ -182,9 +182,12 @@ LIMIT 20;
   }
 
   async fetchPostersByChars(){
+    const ignore = config.vk_pf_ignore ? ` WHERE author_id NOT IN ( SELECT author_id FROM posts where author_id =${config.vk_pf_ignore}) ` : '';
+
     const query = `SELECT author_id, sum(length(text)) AS total_chars,
     COUNT(*) AS posts_count
     from posts
+    ${ignore}
     GROUP BY author_id
     ORDER BY total_chars DESC
     LIMIT 20
@@ -203,6 +206,59 @@ LIMIT 20;
     ;`;
     const data = await this.all(query);
     return data as Array<{from_id:number,total_chars:number,comments_count:number}>
+  }
+
+  async top1likedPost(){
+    const query = "SELECT * from posts ORDER BY likes DESC LIMIT 1";
+    const data = await this.all(query);
+    return data[0] as {
+      text: string;
+      id: number;
+      likes: number;
+      author_id: number;
+      date: number;
+      comments: number;
+    };
+  }
+
+  async top1likedComment(){
+    const query = "SELECT * from comments ORDER BY likes DESC LIMIT 1";
+    const data = await this.all(query);
+    return data[0] as {
+      text: string;
+      id: number;
+      from_id:number;
+      post_id:number;
+      date:number;
+      likes:number;
+    };
+  }
+
+  async top1PostByCHar(){
+    const query = "SELECT *,  length(text) AS post_length from posts ORDER BY post_length DESC LIMIT 1";
+    const data = await this.all(query)
+    return data[0] as {   text: string;
+      id: number;
+      likes: number;
+      author_id: number;
+      date: number;
+      comments: number;
+      post_length:number;
+    };
+  }
+
+  async top1CommentByCHar(){
+    const query = "SELECT *,  length(text) AS comment_length from comments ORDER BY comment_length DESC LIMIT 1";
+    const data = await this.all(query)
+    return data[0] as {
+      text: string;
+      id: number;
+      from_id:number;
+      post_id:number;
+      date:number;
+      likes:number;
+      comment_length:number;
+    };
   }
 }
 

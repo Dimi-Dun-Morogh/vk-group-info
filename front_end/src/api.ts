@@ -146,12 +146,56 @@ class Api {
       console.error(error);
     }
   }
+
+  async allTops1s() {
+    try {
+      const data = await fetch(this.url + '/alltop1').then(d=>d.json());
+      return data as  {
+        post_by_likes: Post,
+        comment_by_likes: Comment,
+        post_by_char: Post,
+        comment_by_char: Comment,
+        profiles: {[key:number]: vkProfile}
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  }
 }
 
 export interface PostStatResp {
   dates: string;
   data: PostStat[];
 }
+
+export interface Comment {
+  text: string;
+  id: number;
+  from_id:number;
+  post_id:number;
+  date:number;
+  likes:number;
+  comment_length:number;
+}
+
+export interface Post {   text: string;
+  id: number;
+  likes: number;
+  author_id: number;
+  date: number;
+  comments: number;
+  post_length:number;
+}
+
+export interface vkProfile {
+  id: number
+  first_name: string
+  last_name: string
+  can_access_closed: boolean
+  photo_100:string
+  is_closed: boolean
+}
+
 
 export interface PostStat {
   Лайков: string;

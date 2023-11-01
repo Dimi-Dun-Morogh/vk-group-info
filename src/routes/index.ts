@@ -139,4 +139,13 @@ router.get('/topposters', async (req: Request, res: Response) => {
   }
 });
 
+router.get('/alltop1', async(req:Request, res: Response)=>{
+  try {
+    const data = await VkGrpInfo.allTop1s();
+    res.status(200).send(data);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send(error);
+}})
+
 export default router;
