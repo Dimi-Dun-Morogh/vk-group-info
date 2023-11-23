@@ -436,6 +436,40 @@ class UI {
     }
   }
 
+  async topLikersScreen() {
+    try {
+      this.wipeRoot();
+      this.NavBtnsState('#TOP_LIKERS');
+      this.toggleSpinner();
+      let data = await api.getLikers();
+      console.log(data)
+      while ('status' in data || 'percentile' in data) {
+        // progress  and
+        console.log(data)
+        await api.waiter(5000);
+        data = await api.getLikers();
+        this.wipeRoot();
+        if ('percentile' in data) {
+          this.commentsProgress(+data.percentile, +data.currInd, +data.arrLen);
+        }
+      }
+
+      this.toggleSpinner();
+      this.wipeRoot();
+      const html = `
+
+      <div class="container-fluid col-md-12 my-3 d-flex flex-column align-items-center">
+
+      ${this.likersTable(data.by_posts, "СТАВИЛИ ЛАЙКИ НА ПОСТЫ")}
+      ${this.likersTable(data.by_comments, "СТАВИЛИ ЛАЙКИ НА КОММЕНТЫ")}
+      </div>
+      `;
+      this.app.innerHTML = html;
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
   private enableNav() {
     const allBtns = document.querySelectorAll('.navbar button');
     allBtns.forEach((el) => el.classList.remove('disabled'));
@@ -451,22 +485,38 @@ class UI {
 
   private async alltop1s() {
     const data = await api.allTops1s();
-    const {post_by_likes, post_by_char, comment_by_likes, profiles, comment_by_char} = data;
-    const postByLikes = {...post_by_likes,profile:this.transformTop1s(post_by_likes, profiles)};
-    const commentByLikes = {...comment_by_likes, profile: this.transformTop1s(comment_by_likes, profiles)};
-    const postByChar = {...post_by_char, profile: this.transformTop1s(post_by_char, profiles)}
-    const commentByChar = {...comment_by_char, profile: this.transformTop1s(comment_by_char, profiles)}
-
-
+    const {
+      post_by_likes,
+      post_by_char,
+      comment_by_likes,
+      profiles,
+      comment_by_char,
+    } = data;
+    const postByLikes = {
+      ...post_by_likes,
+      profile: this.transformTop1s(post_by_likes, profiles),
+    };
+    const commentByLikes = {
+      ...comment_by_likes,
+      profile: this.transformTop1s(comment_by_likes, profiles),
+    };
+    const postByChar = {
+      ...post_by_char,
+      profile: this.transformTop1s(post_by_char, profiles),
+    };
+    const commentByChar = {
+      ...comment_by_char,
+      profile: this.transformTop1s(comment_by_char, profiles),
+    };
 
     const html = `
     <div class="bg-dark text-white p-3">
     <div class="d-flex flex-column justify-content-center fw-bold align-items-center">
       <h5>Самый залайканный пост: </h5>
       <span>лайков: ${postByLikes.likes}</span>
-      <span>автор: ${postByLikes.profile.full_name}<img class="d-block mx-auto" src="${
-      postByLikes.profile.avatar
-    }"></span>
+      <span>автор: ${
+        postByLikes.profile.full_name
+      }<img class="d-block mx-auto" src="${postByLikes.profile.avatar}"></span>
       <span>ссылка на пост: <a href="https://vk.com/club${this.grpId.slice(
         1,
       )}?w=wall${this.grpId}_${postByLikes.id}">w=wall${this.grpId}_${
@@ -481,12 +531,14 @@ class UI {
       <span>лайков: ${commentByLikes.likes}</span>
       <span>автор: ${
         commentByLikes.profile.full_name
-      }<img class="d-block mx-auto" src="${commentByLikes.profile.avatar}"></span>
+      }<img class="d-block mx-auto" src="${
+      commentByLikes.profile.avatar
+    }"></span>
       <span>ссылка на коммент: <a href="https://vk.com/club${this.grpId.slice(
         1,
-      )}?w=wall${this.grpId}_${commentByLikes?.post_id}_r${commentByLikes.id}">w=wall${this.grpId}_${commentByLikes?.post_id}_r${
+      )}?w=wall${this.grpId}_${commentByLikes?.post_id}_r${
       commentByLikes.id
-    }
+    }">w=wall${this.grpId}_${commentByLikes?.post_id}_r${commentByLikes.id}
     </a>
     </span>
       </div>
@@ -500,7 +552,9 @@ class UI {
       }<img class="d-block mx-auto" src="${postByChar.profile.avatar}"></span>
       <span>ссылка на пост: <a href="https://vk.com/club${this.grpId.slice(
         1,
-      )}?w=wall${this.grpId}_${postByChar?.id}">w=wall${this.grpId}_${postByChar.id}
+      )}?w=wall${this.grpId}_${postByChar?.id}">w=wall${this.grpId}_${
+      postByChar.id
+    }
     </a>
     </span>
       </div>
@@ -510,10 +564,14 @@ class UI {
       <span>символов: ${commentByChar.comment_length}</span>
       <span>автор: ${
         commentByChar.profile.full_name
-      }<img class="d-block mx-auto" src="${commentByChar.profile.avatar}"></span>
+      }<img class="d-block mx-auto" src="${
+      commentByChar.profile.avatar
+    }"></span>
       <span>ссылка на коммент: <a href="https://vk.com/club${this.grpId.slice(
         1,
-      )}?w=wall${this.grpId}_${commentByChar?.post_id}_r${commentByChar.id}">w=wall${this.grpId}_${commentByChar.post_id}_r${commentByChar.id}
+      )}?w=wall${this.grpId}_${commentByChar?.post_id}_r${
+      commentByChar.id
+    }">w=wall${this.grpId}_${commentByChar.post_id}_r${commentByChar.id}
     </a>
     </span>
       </div>
@@ -579,8 +637,9 @@ class UI {
           case 'TOPPOSTERS':
             this.topPostersScreen();
             break;
+          case 'TOP_LIKERS':
+            this.topLikersScreen();
           default:
-            console.log(el);
             break;
         }
       }),
@@ -655,6 +714,42 @@ class UI {
   private commentsProgress(percent: number, min: number, max: number) {
     const html = this.progressBar(percent, min, max);
     this.app.innerHTML = html;
+  }
+
+  private likersTable(data:{
+    from_id: number;
+    total: number;
+    user: vkProfile;
+}[], title:string) {
+    const html = ` <h5 class="text-center">${title}</h5>
+    <div class="col-md-8  tbodyDiv" >
+    <table class="table table-bordered table-dark table-striped text-center align-middle">
+    <thead class="sticky-top">
+      <tr>
+        <th scope="col">Место</th>
+        <th scope="col">Комментатор</th>
+        <th scope="col">Лайков</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${data.reduce((acc, el, index) => {
+        acc += `
+        <tr>
+        <th scope="row">${index + 1}</th>
+        <td class="text-start fw-bold author-col"><img class="rounded-circle  mx-5" style="height:50px" src="${
+          el.user.photo_100
+        }"/>
+        ${el.user.first_name} ${el.user.last_name}
+        </td>
+        <td>${el.total}</td>
+      </tr>
+        `;
+        return acc;
+      }, '')}
+    </tbody>
+    </table>
+      </div>`
+      return html;
   }
 }
 

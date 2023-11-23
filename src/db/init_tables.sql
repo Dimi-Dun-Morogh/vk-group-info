@@ -17,3 +17,10 @@ CREATE table IF NOT EXISTS `comments` (
    `likes` INTEGER ,
   PRIMARY KEY (`id`)
 );
+
+CREATE table IF NOT EXISTS `likes` (
+  `id` BIGINT AUTO_INCREMENT,
+  `from_id` BIGINT,
+  `type` VARCHAR,
+  PRIMARY KEY (`id`)
+);

@@ -161,6 +161,37 @@ class Api {
       console.error(error);
     }
   }
+
+  async getLikers() {
+    try {
+      const data = await fetch(this.url +'/likers').then(d=>d.json());
+      return data as {
+        status:'no likes'
+      } | {
+        currInd: string;
+        arrLen: string;
+        percentile: string;
+        mode: string;
+      } | {  by_posts: {
+        from_id: number;
+        total: number;
+        user: vkProfile;
+    }[];
+    by_comments: {
+        from_id: number;
+        total: number;
+        user: vkProfile;
+    }[];}
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  async waiter(ms:number) {
+    return new Promise((resolve)=>{
+      setTimeout(resolve, ms)
+    })
+  }
 }
 
 export interface PostStatResp {

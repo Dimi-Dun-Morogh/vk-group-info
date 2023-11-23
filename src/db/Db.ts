@@ -18,7 +18,7 @@ class Db {
         // console.log('connected to db' + `@${pathDb}`);
       }
     });
-    db.configure("busyTimeout", 30000)
+    db.configure("busyTimeout", 60000)
     return db;
   }
 
@@ -259,6 +259,35 @@ LIMIT 20;
       likes:number;
       comment_length:number;
     };
+  }
+
+  async writeLike(fromId:number,likeType:'post'|'comment'){
+    const query  = `INSERT into likes (from_id, type) VALUES (?,?)`;
+    await this.run(query,  [fromId, likeType]);
+  }
+
+  async allPostIds(){
+    const data = await this.all('SELECT id from posts WHERE likes  > 0');
+    return data as Array<{id:number}>;
+  }
+
+
+  async allCommentIds(){
+    const data = await this.all('SELECT id from comments WHERE likes > 0');
+    return data as Array<{id:number}>;
+  }
+
+  async likers(filter:'post'|'comment') {
+    const query = `SELECT from_id,
+    COUNT(*)  AS total
+    from likes
+    WHERE type =  '${filter}'
+    GROUP BY from_id
+    ORDER BY total DESC
+    LIMIT 20
+    `;
+    const data = await this.all(query);
+    return data as Array<{from_id:number, total:number}>
   }
 }
 

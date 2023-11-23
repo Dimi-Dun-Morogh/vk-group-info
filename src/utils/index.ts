@@ -25,6 +25,27 @@ class Utils {
     writeFileSync(filePath, String(postNum));
   }
 
+  /**
+   *
+   * @param progress 1 string currentIndex|ArrayLength|percentile|mode
+   */
+  static writeLikesProgress(progress: string) {
+    const filePath = path.join(process.cwd(), '/temp_data/likes_progress');
+    writeFileSync(filePath, String(progress));
+  }
+
+  static  getLikesProgress() {
+    const filePath = path.join(process.cwd(), '/temp_data/likes_progress');
+    const exists = existsSync(filePath);
+    if (!exists) return;
+    const data = readFileSync(filePath).toString();
+    const [currInd, arrLen, percentile, mode] = data.split('|');
+    console.log(`current index is ${currInd}, array length is ${arrLen} |
+    ${percentile}% | mode - ${mode}`);
+
+    return {currInd,  arrLen, percentile, mode}
+  }
+
   static async getCommentsProgress() {
     const filePath = path.join(process.cwd(), '/temp_data/comments_progress');
     const exists = existsSync(filePath);
@@ -35,14 +56,17 @@ class Utils {
       'SELECT count(id) as all_posts from posts',
     )) as Array<{ all_posts: number }>;
     const totalPostsNum = totalPosts[0]?.all_posts;
-    const percent =
-      (Number(currIndex) / Number(totalPostsNum) * 100).toFixed(2);
-      console.log(`${percent} %; ${currIndex} out of ${totalPostsNum}; commentsProgress`);
-      return {
-        percent,
-        current: currIndex,
-        totalPostsNum
-      };
+    const percent = ((Number(currIndex) / Number(totalPostsNum)) * 100).toFixed(
+      2,
+    );
+    console.log(
+      `${percent} %; ${currIndex} out of ${totalPostsNum}; commentsProgress`,
+    );
+    return {
+      percent,
+      current: currIndex,
+      totalPostsNum,
+    };
   }
 
   static async getOffset() {
@@ -69,6 +93,18 @@ class Utils {
     const filePath = path.join(process.cwd(), '/temp_data/comments.txt');
     const exists = existsSync(filePath);
     if (!exists) return 'no comments';
+    return readFileSync(filePath).toString();
+  }
+
+  static writeLikesStatus(status: string) {
+    const filePath = path.join(process.cwd(), '/temp_data/likes.txt');
+    writeFileSync(filePath, status);
+  }
+
+  static readLikesStatus() {
+    const filePath = path.join(process.cwd(), '/temp_data/likes.txt');
+    const exists = existsSync(filePath);
+    if (!exists) return 'no likes';
     return readFileSync(filePath).toString();
   }
 

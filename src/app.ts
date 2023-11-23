@@ -5,6 +5,7 @@ import express from 'express';
 import cors from 'cors';
 import Db from 'db/Db';
 import Utils from 'utils';
+import vk from 'vk';
 
 cli();
 
@@ -17,9 +18,10 @@ web.use('/', router);
 web.listen(3000);
 
 (async () => {
-  // const db = new Db();
-  //  await Db.initTables();
+
+  //await Db.initTables();
   //  await db.writePost();
  //Db.fetchTopPosts();
 //  await Utils.getCommentsProgress();
+  // await vk.countLikers('comment');
 })()

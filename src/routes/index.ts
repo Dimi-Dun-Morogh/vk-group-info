@@ -148,4 +148,28 @@ router.get('/alltop1', async(req:Request, res: Response)=>{
     res.status(500).send(error);
 }})
 
+router.get('/likers', async(req:Request, res: Response)=>{
+  try {
+    //TODO!: check if likers data ready and  send status if not
+    const status = Utils.readLikesStatus();
+    console.log(status)
+    if(status === 'no likes') {
+      VkGrpInfo.wrapCountLikers();
+      res.status(200).send({status:'no likes'});
+      return;
+    }
+
+    if(status === "START") {
+      const progress = Utils.getLikesProgress();
+      res.status(200).send(progress);
+      return;
+    }
+    const data = await VkGrpInfo.likers();
+    res.status(200).send(data);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send(error);
+}
+})
+
 export default router;

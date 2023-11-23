@@ -73,7 +73,7 @@ class VkGrpInfo {
 
       if (reachedDate) {
         console.timeEnd('getWPosts');
-      await  this.postDates();
+        await this.postDates();
         Utils.writeOffset('DONE');
         return;
       }
@@ -105,8 +105,12 @@ class VkGrpInfo {
     const done = (await Utils.getOffset()) === 'DONE';
     if (!done) return '';
     const data =
-      await Db.all(`SELECT MIN(date) AS earliest_date , MAX(date) as latest_date , COUNT(*) as post_count
-    FROM posts;`)  as {earliest_date:number, latest_date:number, post_count:number}[];
+      (await Db.all(`SELECT MIN(date) AS earliest_date , MAX(date) as latest_date , COUNT(*) as post_count
+    FROM posts;`)) as {
+        earliest_date: number;
+        latest_date: number;
+        post_count: number;
+      }[];
 
     const lastDate = new Date(Number(data[0].earliest_date)).toLocaleString(
       'Ru-ru',
@@ -198,7 +202,7 @@ class VkGrpInfo {
     }
   }
 
-  async topPostersByChar(){
+  async topPostersByChar() {
     const data = await Db.fetchPostersByChars();
     const idsToFetch = data.reduce(
       (acc, el) => (acc += `${el.author_id},`),
@@ -215,7 +219,6 @@ class VkGrpInfo {
         ПОСТОВ: el.posts_count,
         'имя автора': `${author?.first_name} ${author?.last_name}`,
         avatar: author?.photo_100,
-
       };
     });
 
@@ -235,12 +238,9 @@ class VkGrpInfo {
     };
   }
 
-  async topCommentatorsByChar(){
+  async topCommentatorsByChar() {
     const data = await Db.fetchCommentatorsByChars();
-    const idsToFetch = data.reduce(
-      (acc, el) => (acc += `${el.from_id},`),
-      '',
-    );
+    const idsToFetch = data.reduce((acc, el) => (acc += `${el.from_id},`), '');
     const url = `https://api.vk.com/method/users.get?&fields=photo_100&user_ids=${encodeURIComponent(
       idsToFetch,
     )}&access_token=${vk_token}&v=5.131`;
@@ -252,7 +252,6 @@ class VkGrpInfo {
         КОМЕНТАРИЕВ: el.comments_count,
         'имя автора': `${author?.first_name} ${author?.last_name}`,
         avatar: author?.photo_100,
-
       };
     });
 
@@ -275,13 +274,15 @@ class VkGrpInfo {
   async countComments() {
     try {
       console.time('countComments');
-      const postIds = await Db.all("SELECT id FROM posts") as {id:number}[];
+      const postIds = (await Db.all('SELECT id FROM posts')) as {
+        id: number;
+      }[];
 
       const res = {} as { [key: number]: number };
 
-      for (const [index,postId] of postIds.entries()) {
+      for (const [index, postId] of postIds.entries()) {
         //?will write index to file here for progress bar purposes
-        Utils.writeCommentProgress(index+1);
+        Utils.writeCommentProgress(index + 1);
 
         console.timeLog('countComments', postId);
         const data = await this.vkScriptComments(postId.id, 0);
@@ -446,13 +447,13 @@ class VkGrpInfo {
   }
 
   async printTopComentator(filter: 'comments_count' | 'total_likes') {
-    console.log('hi')
+    console.log('hi');
     const data = await Db.fetchTopCommentators(filter);
     const idsToFetch = data.reduce(
       (acc, item) => (acc += `${item.from_id},`),
       '',
     );
-      console.log(data, filter)
+    console.log(data, filter);
     const url = `https://api.vk.com/method/users.get?&user_ids=${encodeURIComponent(
       idsToFetch,
     )}&fields=photo_100&access_token=${vk_token}&v=5.131`;
@@ -499,13 +500,14 @@ ${await this.postDates()}`);
         1,
       )}&access_token=${vk_token}&v=5.131`;
       const data: GrpInfoResponse = await fetch(url).then((d) => d.json());
+      console.log(data);
       return data.response[0];
     } catch (error) {
       console.error(error);
     }
   }
 
-  async allTop1s(){
+  async allTop1s() {
     const topLikedPost = await Db.top1likedPost();
     const topLikedComment = await Db.top1likedComment();
     const topPostByChar = await Db.top1PostByCHar();
@@ -518,20 +520,115 @@ ${await this.postDates()}`);
       comment_by_likes: topLikedComment,
       post_by_char: topPostByChar,
       comment_by_char: topCommentByChar,
-      profiles
+      profiles,
     };
-
   }
 
-  private async profileData(ids:string){
+  private async profileData(ids: string) {
     const url = `https://api.vk.com/method/users.get?&fields=photo_100&user_ids=${encodeURIComponent(
       ids,
     )}&access_token=${vk_token}&v=5.131`;
     const usersGet: UserResponse = await fetch(url).then((d) => d.json());
-    return usersGet.response.reduce((acc,el)=>{
+    return usersGet.response.reduce((acc, el) => {
       acc[el.id] = el;
       return acc;
-    }, {} as {[key:number]:User});
+    }, {} as { [key: number]: User });
+  }
+
+  async wrapCountLikers(){
+    Utils.writeLikesStatus('START');
+    await this.countLikers('post');
+    await  this.countLikers('comment');
+    Utils.writeLikesStatus('OK');
+  }
+
+  async countLikers(mode: 'post' | 'comment') {
+    console.time('countLikers');
+
+    let allIds = [];
+    if (mode === 'post') {
+      allIds = await Db.allPostIds();
+    } else {
+      allIds = await Db.allCommentIds();
+    }
+
+    for (let i = 0; i < allIds.length; i += 20) {
+      const Ids = [];
+
+      for (let j = i; j < i + 20; j++) {
+        if (allIds[j]) Ids.push(allIds[j].id);
+      }
+
+      const data = await this.vkScriptLikes(Ids, mode);
+      console.log(data);
+      //TODO TOKEN SWAP ON ERROR 29
+      const dataFlatten = data.response.flat();
+      await Utils.waiter(700);
+
+      console.timeLog('countLikers');
+
+      Utils.writeLikesProgress(
+        `${i}|${allIds.length}|${((i / allIds.length) * 100).toFixed(
+          2,
+        )}|${mode}`,
+      );
+      Utils.getLikesProgress();
+      for (const dataLike of dataFlatten) {
+        await Db.writeLike(dataLike, mode);
+      }
+    }
+    console.timeEnd('countLikers');
+
+  }
+
+  private async vkScriptLikes(iDs: number[], type: 'post' | 'comment') {
+    const vkScript = `
+    var res = [];
+    var Ids =  ${JSON.stringify(iDs)};
+
+    var grpId = ${config.vk_grp_id};
+    var likeType ="${type}";
+
+    while(Ids.length){
+        var itemId = Ids.shift();
+        var rootData = API.likes.getList({owner_id:grpId, item_id:itemId,
+        count: 300, type: likeType});
+        res.push(rootData.items);
+    }
+
+
+
+    return res;`;
+
+    const url = `https://api.vk.com/method/execute?&code=${encodeURIComponent(
+      vkScript,
+    )}&access_token=${vk_token}&v=5.154`;
+
+    const data = await fetch(url).then((d) => d.json());
+    return data as {
+      response: Array<Array<number>>;
+    };
+  }
+
+  async likers() {
+    const byPosts = await Db.likers('post');
+    const byComments = await Db.likers('comment');
+
+    const allProfileIds =
+      byPosts.reduce((acc, el) => (acc += `${el.from_id},`), '') +
+      byComments.reduce((acc, el) => (acc += `${el.from_id},`), '');
+
+    const profileData = await this.profileData(allProfileIds);
+
+    const serialize = (data: { from_id: number; total: number }[]) => {
+      return data.reduce((acc, el) => {
+        const profile = profileData[el.from_id];
+        acc.push({ ...el, user: profile });
+        return acc;
+      }, [] as { from_id: number; total: number; user: User }[]);
+    };
+
+    return { by_posts: serialize(byPosts), by_comments: serialize(byComments) };
   }
 }
 
